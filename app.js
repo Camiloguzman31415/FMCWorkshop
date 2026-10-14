@@ -1273,11 +1273,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Random Scramble
   btnRandom.addEventListener('click', () => {
     pausePlayback();
-    const newScramble = FMC.generateRandomScramble(21);
+    const newScramble = FMC.generateRandomScramble(25);
     scrambleInput.value = newScramble;
     currentStep = 0;
     updateSolution();
-    showToast('New random scramble generated');
+    showToast('Nueva mezcla FMC generada');
   });
 
   // Remove Comments

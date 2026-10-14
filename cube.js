@@ -672,8 +672,17 @@
     };
   }
 
-  // Generate standard random WCA scramble
-  function generateRandomScramble(len = 22) {
+  // Generate official WCA Fewest Moves (FMC) scramble
+  // In accordance with WCA / TNoodle regulations, official FMC scrambles always:
+  // 1. Start with the prefix: R' U' F
+  // 2. End with the suffix: R' U' F
+  // 3. Middle moves follow canonical non-cancelling sequences:
+  //    - First middle move cannot be F or B (avoids cancellation with prefix F)
+  //    - Last middle move cannot be R or L (avoids cancellation with suffix R')
+  //    - No two consecutive turns on the same face
+  //    - Canonical ordering on commuting pairs (U before D, L before R, F before B)
+  //    - No 3+ turns on the same axis
+  function generateRandomScramble(totalMoves = 25) {
     const faces = ['U', 'D', 'L', 'R', 'F', 'B'];
     const modifiers = ['', "'", '2'];
     const oppositeFaces = {
@@ -681,23 +690,61 @@
       'L': 'R', 'R': 'L',
       'F': 'B', 'B': 'F'
     };
+    const faceOrder = {
+      'U': 1, 'D': 2,
+      'L': 3, 'R': 4,
+      'F': 5, 'B': 6
+    };
 
-    const moves = [];
-    let lastFace = '';
-    let secondLastFace = '';
+    const prefix = ["R'", "U'", "F"];
+    const suffix = ["R'", "U'", "F"];
 
-    while (moves.length < len) {
-      const face = faces[Math.floor(Math.random() * faces.length)];
-      if (face === lastFace) continue;
-      if (face === secondLastFace && oppositeFaces[lastFace] === face) continue;
+    // Target middle length (default ~19 moves for 25 total)
+    const targetMiddleLen = Math.max(12, totalMoves - prefix.length - suffix.length);
 
-      const mod = modifiers[Math.floor(Math.random() * modifiers.length)];
-      moves.push(face + mod);
-      secondLastFace = lastFace;
-      lastFace = face;
+    for (let attempts = 0; attempts < 500; attempts++) {
+      const middleMoves = [];
+      let lastFace = 'F'; // Treat prefix last move ('F') as last face to avoid immediate F/B
+      let secondLastFace = '';
+
+      while (middleMoves.length < targetMiddleLen) {
+        const allowedFaces = faces.filter(face => {
+          if (middleMoves.length === 0) {
+            // Axis restriction with prefix "F": cannot be F or B
+            if (face === 'F' || face === 'B') return false;
+          }
+          if (face === lastFace) return false;
+          // Canonical ordering on commuting opposite faces
+          if (oppositeFaces[lastFace] === face && faceOrder[lastFace] > faceOrder[face]) {
+            return false;
+          }
+          // Prevent 3+ turns on the same axis (e.g. U D U)
+          if (secondLastFace && (face === secondLastFace || face === oppositeFaces[secondLastFace]) && oppositeFaces[lastFace] === secondLastFace) {
+            return false;
+          }
+          return true;
+        });
+
+        if (allowedFaces.length === 0) break;
+
+        const face = allowedFaces[Math.floor(Math.random() * allowedFaces.length)];
+        const mod = modifiers[Math.floor(Math.random() * modifiers.length)];
+        middleMoves.push(face + mod);
+        secondLastFace = lastFace;
+        lastFace = face;
+      }
+
+      if (middleMoves.length === targetMiddleLen) {
+        const lastMiddleMoveFace = middleMoves[middleMoves.length - 1][0];
+        // Axis restriction with suffix "R'": cannot be R or L
+        if (lastMiddleMoveFace !== 'R' && lastMiddleMoveFace !== 'L') {
+          return [...prefix, ...middleMoves, ...suffix].join(' ');
+        }
+      }
     }
 
-    return moves.join(' ');
+    // Fallback if loop exceeded attempts
+    return [...prefix, "D2", "R2", "B2", "U2", ...suffix].join(' ');
   }
 
   // Export
