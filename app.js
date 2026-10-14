@@ -1061,11 +1061,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const ICON_PAUSE = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
 
   const TIMER_MODES = {
-    FMC_60: 'FMC_60', // 60 minutes countdown (3600 seconds)
-    STOPWATCH: 'STOPWATCH' // count up from 0
+    STOPWATCH: 'STOPWATCH', // count up from 0
+    FMC_60: 'FMC_60' // 60 minutes countdown (3600 seconds)
   };
 
-  let timerMode = localStorage.getItem('fmc_timer_mode') || TIMER_MODES.FMC_60;
+  let timerMode = localStorage.getItem('fmc_timer_mode');
+  if (!timerMode || timerMode === 'FMC_60') {
+    timerMode = TIMER_MODES.STOPWATCH;
+    localStorage.setItem('fmc_timer_mode', TIMER_MODES.STOPWATCH);
+  }
   let timerRunning = false;
   let timerInterval = null;
   let timerElapsedSeconds = 0;
