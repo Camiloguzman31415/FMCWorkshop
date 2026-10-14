@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   scene.background = new THREE.Color(0x18191c);
 
   const camera = new THREE.PerspectiveCamera(40, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 100);
-  const defaultCameraPos = new THREE.Vector3(4.45, 3.88, 5.38);
+  const defaultCameraPos = new THREE.Vector3(3.95, 3.44, 4.77);
   camera.position.copy(defaultCameraPos);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.minDistance = 4;
+  controls.minDistance = 3.2;
   controls.maxDistance = 18;
 
   // Lights
