@@ -1192,13 +1192,11 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast('¡Aviso FMC: 55 minutos cumplidos (quedan 5 min)!');
         }
 
-        // 60 minutes limit reached: pause automatically and alert
+        // 60 minutes limit reached: alert user but continue counting
         if (timerElapsedSeconds >= 3600 && !warned60Min) {
           warned60Min = true;
-          timerElapsedSeconds = 3600;
-          pauseTimer();
           playAlertBeep('limit');
-          showToast('¡Tiempo límite alcanzado: 60 minutos (Fin de intento)!');
+          showToast('¡Tiempo límite alcanzado: 60 minutos!');
         }
       }
       updateTimerUI();
