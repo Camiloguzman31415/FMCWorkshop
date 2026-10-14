@@ -677,19 +677,175 @@ html, body {
   font-weight: 700;
 }
 
-/* Action Buttons Container */
+/* Action Buttons Container & Timer */
 .action-buttons-container {
   display: flex;
+  align-items: stretch;
+  gap: 10px;
   margin-top: 6px;
   margin-bottom: 0;
   width: 100%;
+}
+
+/* FMC Timer Widget */
+.timer-widget {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 5px 10px;
+  min-height: 60px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  user-select: none;
+  flex: 1 1 auto;
+  min-width: 130px;
+  max-width: 220px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.timer-widget:hover {
+  border-color: #555562;
+}
+
+.timer-widget.running {
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.timer-widget.warning {
+  border-color: rgba(251, 191, 36, 0.65);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.25);
+}
+
+.timer-widget.danger {
+  border-color: rgba(248, 113, 113, 0.75);
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.35);
+}
+
+.timer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.timer-mode-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.3px;
+  transition: all 0.15s ease;
+}
+
+.timer-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.timer-icon-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.timer-icon-btn:hover {
+  color: #ffffff;
+  transform: rotate(-45deg);
+}
+
+.timer-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.timer-display {
+  font-family: 'JetBrains Mono', 'Roboto Mono', 'Cascadia Code', monospace;
+  font-size: 21px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.timer-display:hover {
+  color: #38bdf8;
+}
+
+.timer-widget.running .timer-display {
+  color: #38bdf8;
+}
+
+.timer-widget.warning .timer-display {
+  color: #fbbf24;
+}
+
+.timer-widget.danger .timer-display {
+  color: #f87171;
+}
+
+.timer-start-btn {
+  background: #2563eb;
+  border: none;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+  flex-shrink: 0;
+}
+
+.timer-start-btn:hover {
+  background: #3b82f6;
+  transform: scale(1.06);
+}
+
+.timer-start-btn:active {
+  transform: scale(0.95);
+}
+
+.timer-widget.running .timer-start-btn {
+  background: #f59e0b;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.timer-widget.running .timer-start-btn:hover {
+  background: #fbbf24;
 }
 
 .action-buttons-row {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  width: 100%;
+  flex: 0 0 auto;
   flex-wrap: nowrap;
 }
 

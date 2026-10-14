@@ -1048,6 +1048,145 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // --- FMC Timer & Stopwatch Logic ---
+  const fmcTimerWidget = document.getElementById('fmc-timer-widget');
+  const timerDisplay = document.getElementById('timer-display');
+  const btnTimerStart = document.getElementById('btn-timer-start');
+  const timerStartIcon = document.getElementById('timer-start-icon');
+  const btnTimerReset = document.getElementById('btn-timer-reset');
+  const btnTimerMode = document.getElementById('btn-timer-mode');
+  const timerModeLabel = document.getElementById('timer-mode-label');
+
+  const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
+  const ICON_PAUSE = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+
+  const TIMER_MODES = {
+    FMC_60: 'FMC_60', // 60 minutes countdown (3600 seconds)
+    STOPWATCH: 'STOPWATCH' // count up from 0
+  };
+
+  let timerMode = localStorage.getItem('fmc_timer_mode') || TIMER_MODES.FMC_60;
+  let timerRunning = false;
+  let timerInterval = null;
+  let timerElapsedSeconds = 0;
+  let timerRemainingSeconds = 3600;
+  let timerLastTimestamp = null;
+
+  function formatTime(totalSeconds) {
+    const sec = Math.max(0, Math.floor(totalSeconds));
+    const minutes = Math.floor(sec / 60);
+    const seconds = sec % 60;
+    const pad = (n) => (n < 10 ? '0' + n : String(n));
+    return pad(minutes) + ':' + pad(seconds);
+  }
+
+  function updateTimerUI() {
+    if (!timerDisplay) return;
+
+    if (timerMode === TIMER_MODES.FMC_60) {
+      if (timerModeLabel) timerModeLabel.textContent = '60m FMC';
+      timerDisplay.textContent = formatTime(timerRemainingSeconds);
+
+      // Warning color coding when time is running low
+      if (timerRemainingSeconds <= 60) {
+        fmcTimerWidget.classList.add('danger');
+        fmcTimerWidget.classList.remove('warning');
+      } else if (timerRemainingSeconds <= 300) {
+        fmcTimerWidget.classList.add('warning');
+        fmcTimerWidget.classList.remove('danger');
+      } else {
+        fmcTimerWidget.classList.remove('warning', 'danger');
+      }
+    } else {
+      if (timerModeLabel) timerModeLabel.textContent = 'Cronómetro';
+      timerDisplay.textContent = formatTime(timerElapsedSeconds);
+      fmcTimerWidget.classList.remove('warning', 'danger');
+    }
+
+    if (timerRunning) {
+      fmcTimerWidget.classList.add('running');
+      if (timerStartIcon) timerStartIcon.innerHTML = ICON_PAUSE;
+      if (btnTimerStart) btnTimerStart.title = 'Pausar cronómetro';
+    } else {
+      fmcTimerWidget.classList.remove('running');
+      if (timerStartIcon) timerStartIcon.innerHTML = ICON_PLAY;
+      if (btnTimerStart) btnTimerStart.title = 'Iniciar cronómetro';
+    }
+  }
+
+  function startTimer() {
+    if (timerRunning) return;
+    timerRunning = true;
+    timerLastTimestamp = performance.now();
+
+    timerInterval = setInterval(() => {
+      const now = performance.now();
+      const deltaSec = (now - timerLastTimestamp) / 1000;
+      timerLastTimestamp = now;
+
+      if (timerMode === TIMER_MODES.FMC_60) {
+        timerRemainingSeconds -= deltaSec;
+        if (timerRemainingSeconds <= 0) {
+          timerRemainingSeconds = 0;
+          pauseTimer();
+          showToast('¡Tiempo FMC finalizado (60 minutos)!');
+        }
+      } else {
+        timerElapsedSeconds += deltaSec;
+      }
+      updateTimerUI();
+    }, 200);
+
+    updateTimerUI();
+  }
+
+  function pauseTimer() {
+    if (!timerRunning) return;
+    timerRunning = false;
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    updateTimerUI();
+  }
+
+  function toggleTimer() {
+    if (timerRunning) {
+      pauseTimer();
+    } else {
+      startTimer();
+    }
+  }
+
+  function resetTimer() {
+    pauseTimer();
+    timerElapsedSeconds = 0;
+    timerRemainingSeconds = 3600;
+    updateTimerUI();
+    showToast(timerMode === TIMER_MODES.FMC_60 ? 'Cronómetro restablecido a 60:00' : 'Cronómetro restablecido a 00:00');
+  }
+
+  function toggleTimerMode() {
+    pauseTimer();
+    if (timerMode === TIMER_MODES.FMC_60) {
+      timerMode = TIMER_MODES.STOPWATCH;
+      timerElapsedSeconds = 0;
+    } else {
+      timerMode = TIMER_MODES.FMC_60;
+      timerRemainingSeconds = 3600;
+    }
+    localStorage.setItem('fmc_timer_mode', timerMode);
+    updateTimerUI();
+    showToast(timerMode === TIMER_MODES.FMC_60 ? 'Modo: Cuenta atrás FMC (60m)' : 'Modo: Cronómetro libre');
+  }
+
+  if (btnTimerStart) btnTimerStart.addEventListener('click', toggleTimer);
+  if (timerDisplay) timerDisplay.addEventListener('click', toggleTimer);
+  if (btnTimerReset) btnTimerReset.addEventListener('click', resetTimer);
+  if (btnTimerMode) btnTimerMode.addEventListener('click', toggleTimerMode);
+
+  updateTimerUI();
+
   // --- Action Buttons ---
 
   // Reset
