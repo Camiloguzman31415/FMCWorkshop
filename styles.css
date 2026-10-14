@@ -597,6 +597,38 @@ html, body {
   color: #ffffff;
 }
 
+.banner-toggle-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.banner-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.banner-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.banner-toggle-btn svg {
+  flex-shrink: 0;
+}
+
 .fmc-content-display {
   background-color: var(--grey-content);
   color: var(--grey-content-text);
