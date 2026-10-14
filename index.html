@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FMCWorkshop - Fewest Moves Challenge Tool</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="brand-section" id="btn-load-example" title="Haz clic para recargar el ejemplo WR #1">
+        <div class="logo-cube">
+          <svg viewBox="0 0 48 48" class="logo-cube-svg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="cubeTopGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="#dce3ec"/>
+                <stop offset="100%" stop-color="#ffffff"/>
+              </linearGradient>
+              <linearGradient id="cubeLeftGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ff451a"/>
+                <stop offset="100%" stop-color="#c62828"/>
+              </linearGradient>
+              <linearGradient id="cubeRightGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#00e676"/>
+                <stop offset="100%" stop-color="#00897b"/>
+              </linearGradient>
+              <filter id="cubeDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.6"/>
+              </filter>
+            </defs>
+
+            <g filter="url(#cubeDropShadow)">
+              <!-- Base 3D Isometric Black Cube Shell -->
+              <polygon points="24,24 41.32,14 24,4 6.68,14" fill="#18181f" stroke="#101014" stroke-width="0.8" stroke-linejoin="round"/>
+              <polygon points="24,24 6.68,14 6.68,34 24,44" fill="#111116" stroke="#0b0b0e" stroke-width="0.8" stroke-linejoin="round"/>
+              <polygon points="24,24 41.32,14 41.32,34 24,44" fill="#0c0c10" stroke="#08080a" stroke-width="0.8" stroke-linejoin="round"/>
+
+              <!-- Top 9 Stickers (White) -->
+              <polygon points="24.00,23.30 19.44,20.67 24.00,18.03 28.56,20.67" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="29.77,19.97 25.21,17.33 29.77,14.70 34.33,17.33" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="35.55,16.63 30.99,14.00 35.55,11.37 40.11,14.00" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="18.23,19.97 13.67,17.33 18.23,14.70 22.79,17.33" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="24.00,16.63 19.44,14.00 24.00,11.37 28.56,14.00" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="29.77,13.30 25.21,10.67 29.77,8.03 34.33,10.67" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="12.45,16.63 7.89,14.00 12.45,11.37 17.01,14.00" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="18.23,13.30 13.67,10.67 18.23,8.03 22.79,10.67" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="24.00,9.97 19.44,7.33 24.00,4.70 28.56,7.33" fill="url(#cubeTopGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+
+              <!-- Left 9 Stickers (Red/Orange) -->
+              <polygon points="23.39,24.35 18.83,21.72 18.83,26.98 23.39,29.62" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="23.39,31.02 18.83,28.38 18.83,33.65 23.39,36.28" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="23.39,37.68 18.83,35.05 18.83,40.32 23.39,42.95" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="17.62,21.02 13.06,18.38 13.06,23.65 17.62,26.28" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="17.62,27.68 13.06,25.05 13.06,30.32 17.62,32.95" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="17.62,34.35 13.06,31.72 13.06,36.98 17.62,39.62" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="11.85,17.68 7.29,15.05 7.29,20.32 11.85,22.95" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="11.85,24.35 7.29,21.72 7.29,26.98 11.85,29.62" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="11.85,31.02 7.29,28.38 7.29,33.65 11.85,36.28" fill="url(#cubeLeftGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+
+              <!-- Right 9 Stickers (Green) -->
+              <polygon points="24.61,24.35 29.17,21.72 29.17,26.98 24.61,29.62" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="24.61,31.02 29.17,28.38 29.17,33.65 24.61,36.28" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="24.61,37.68 29.17,35.05 29.17,40.32 24.61,42.95" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="30.38,21.02 34.94,18.38 34.94,23.65 30.38,26.28" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="30.38,27.68 34.94,25.05 34.94,30.32 30.38,32.95" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="30.38,34.35 34.94,31.72 34.94,36.98 30.38,39.62" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="36.15,17.68 40.71,15.05 40.71,20.32 36.15,22.95" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="36.15,24.35 40.71,21.72 40.71,26.98 36.15,29.62" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+              <polygon points="36.15,31.02 40.71,28.38 40.71,33.65 36.15,36.28" fill="url(#cubeRightGrad)" stroke="#1a1a20" stroke-width="0.6" stroke-linejoin="round"/>
+            </g>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <span class="brand-name"><span class="brand-fmc">FMC</span><span class="brand-workshop">Workshop</span></span>
+          <span class="brand-badge">FEWEST MOVES</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="header-btn" id="btn-new-recon" title="Iniciar nueva reconstrucción">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+          </svg>
+          <span>New Recon</span>
+        </button>
+        <button class="header-btn accent" id="btn-donate" title="Donaciones / Reconocimientos">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <span>donate</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Left Column: 3D Cube & Playback Controls -->
+      <section class="left-pane">
+        <!-- Top Toolbar on Canvas -->
+        <div class="viewport-top-controls">
+          <button class="ctrl-btn" id="btn-settings" title="Configuraciones">
+            Settings
+          </button>
+          <div class="highlight-box">
+            <label class="highlight-label" for="highlight-select">Highlight:</label>
+            <select class="highlight-select" id="highlight-select">
+              <option value="Full">Full</option>
+              <option value="EO_FB">EO (F/B)</option>
+              <option value="EO_RL">EO (R/L)</option>
+              <option value="EO_UD">EO (U/D)</option>
+              <option value="DR_UD">Domino Reduction (U/D)</option>
+              <option value="Corners">Corners Only</option>
+              <option value="Edges">Edges Only</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Badges Container -->
+        <div class="status-badge-container">
+          <span class="badge badge-normal" id="status-badge">3x3</span>
+          <span class="badge badge-info" id="eo-badge">EO (F/B): Solved</span>
+        </div>
+
+        <!-- 3D Canvas -->
+        <div class="canvas-container" id="canvas-container">
+          <canvas id="cube-canvas"></canvas>
+          <div class="canvas-hint">Arrastra para rotar la vista 3D &bull; Rueda para zoom</div>
+        </div>
+
+        <!-- Playback Controls Bar -->
+        <div class="playback-bar">
+          <div class="scrubber-wrapper">
+            <input type="range" class="scrubber-track" id="scrubber" min="0" max="0" value="0">
+            <div class="scrubber-meta">
+              <span id="current-move-label" class="current-move-label">Solved</span>
+              <span id="move-progress">0 / 0</span>
+            </div>
+          </div>
+
+          <div class="player-buttons">
+            <button class="player-btn" id="btn-first" title="Inicio (Home)">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+              </svg>
+            </button>
+            <button class="player-btn" id="btn-prev" title="Paso anterior (Flecha Izquierda)">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
+              </svg>
+            </button>
+            <button class="player-btn" id="btn-play" title="Reproducir (Espacio)">
+              <svg viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+            <button class="player-btn" id="btn-next" title="Paso siguiente (Flecha Derecha)">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
+              </svg>
+            </button>
+            <button class="player-btn" id="btn-last" title="Fin (End)">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Scramble, Moves, Result & Actions -->
+      <section class="right-pane">
+        <!-- Title Input -->
+        <div class="title-container">
+          <input type="text" id="title-input" class="title-input" placeholder="Title">
+        </div>
+
+        <!-- Scramble Input Area -->
+        <textarea id="scramble-input" class="fmc-textarea" placeholder="Enter Scramble Here!" spellcheck="false" rows="1"></textarea>
+
+        <!-- Inverse Scramble Display -->
+        <div class="fmc-box">
+          <div class="fmc-banner">
+            <span>INVERSE SCRAMBLE:</span>
+          </div>
+          <div id="inverse-scramble-display" class="fmc-content-display empty" title="Haz clic para copiar">
+            Scramble Inverse
+          </div>
+        </div>
+
+        <!-- Moves Input Area -->
+        <textarea id="moves-input" class="fmc-textarea" placeholder="Enter Moves Here!" spellcheck="false" rows="6"></textarea>
+
+        <!-- Final Result Display -->
+        <div class="fmc-box">
+          <div class="fmc-banner">
+            <span>RESULT:</span>
+            <span id="ftm-count" class="banner-metric">0FTM</span>
+          </div>
+          <div id="result-display" class="fmc-content-display empty" title="Haz clic en cualquier movimiento para ir a ese paso">
+            Final Result
+          </div>
+        </div>
+
+        <!-- Action Buttons Grid -->
+        <div class="action-buttons-container">
+          <div class="action-buttons-row">
+            <button class="action-tile" id="btn-reset" title="Reiniciar vista al inicio de la mezcla">
+              <svg viewBox="0 0 24 24">
+                <path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-2.48 1.13-4.7 2.91-6.17L5.49 4.41A9.92 9.92 0 0 0 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-2.97-1.3-5.63-3.17-7.83z"/>
+              </svg>
+              <span>Reset</span>
+            </button>
+
+            <button class="action-tile" id="btn-random" title="Generar mezcla aleatoria WCA">
+              <svg viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+              </svg>
+              <span>Random</span>
+            </button>
+
+            <button class="action-tile" id="btn-remove-comments" title="Remover comentarios // de la solución">
+              <svg viewBox="0 0 24 24">
+                <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <span>Remove<br>Comments</span>
+            </button>
+
+            <button class="action-tile" id="btn-copy-state" title="Copiar estado de la mezcla y movimientos (compatible con NISSY)">
+              <svg viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+              <span>Copy State</span>
+            </button>
+
+            <button class="action-tile" id="btn-copy-share" title="Copiar enlace con mezcla y solución para compartir">
+              <svg viewBox="0 0 24 24">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+              </svg>
+              <span>Copy / Share</span>
+            </button>
+          </div>
+
+          <div class="action-buttons-subrow">
+            <button class="action-tile" id="btn-invert" title="Invertir mezcla y solución">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
+              </svg>
+              <span>Invert</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Settings & Information</h3>
+          <button class="modal-close-btn" id="close-settings">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-item">
+            <label for="anim-speed">Velocidad de Reproducción:</label>
+            <select id="anim-speed">
+              <option value="150">Rápida (150ms)</option>
+              <option value="300" selected>Normal (300ms)</option>
+              <option value="500">Lenta (500ms)</option>
+              <option value="800">Muy Lenta (800ms)</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <label>Vista de Cámara:</label>
+            <button class="ctrl-btn" id="btn-reset-camera">Restablecer Cámara</button>
+          </div>
+
+          <div>
+            <h4>Notación FMC Compatible:</h4>
+            <p><strong>NISS:</strong> Los movimientos dentro de paréntesis <code>( ... )</code> se ejecutan sobre la mezcla inversa. El resultado final se combina automáticamente en una solución lineal.</p>
+            <p style="margin-top:6px;"><strong>Comentarios:</strong> Todo texto después de <code>//</code> o entre <code>/* ... */</code> es ignorado.</p>
+            <p style="margin-top:6px;"><strong>Inserciones:</strong> Usa <code>@</code>, <code>@@</code>, <code>@1</code> o <code>*</code>, <code>*1</code> y defínelas al final con <code>@= movimientos</code> o <code>*1 = movimientos</code>.</p>
+            <p style="margin-top:6px;"><strong>Conmutadores:</strong> Se expanden automáticamente: <code>[A, B]</code> &rarr; <code>A B A' B'</code> y <code>[A: B]</code> &rarr; <code>A B A'</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Donate Modal -->
+    <div class="modal-overlay" id="donate-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Acerca de FMCWorkshop</h3>
+          <button class="modal-close-btn" id="close-donate">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p><strong>FMCWorkshop</strong> es una herramienta diseñada para aprender, analizar y practicar la categoría <em>Fewest Moves (FMC)</em> del Cubo de Rubik.</p>
+          <p>Inspirado en la aplicación original desarrollada por <strong>Gil Zussman</strong> y en las contribuciones de la comunidad de speedcubing (Sebastiano Tronto - NISSY, Baiqiang - Insertion Finder / 333.fm).</p>
+          <p style="margin-top: 10px;">¡Disfruta encontrando soluciones cada vez más cortas!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+  <script src="cube.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
