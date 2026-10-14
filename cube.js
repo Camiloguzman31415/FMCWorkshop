@@ -620,12 +620,15 @@
   function checkDR(cubeState, eoAxis = 'FB') {
     const eoResult = checkEO(cubeState, eoAxis);
 
+    const uColor = cubeState[4];
+    const dColor = cubeState[31];
+
     // Check corner orientation to U/D
     let orientedCornersCount = 0;
     const badCorners = [];
     CORNERS.forEach(c => {
       const cu = cubeState[c.fU];
-      if (cu === U || cu === D) {
+      if (cu === uColor || cu === dColor) {
         orientedCornersCount++;
       } else {
         badCorners.push(c);
@@ -635,15 +638,24 @@
     // Check E-slice edges: pieces with no U or D color
     // Should be in E-slice positions: FR, FL, BR, BL
     let eSliceCorrect = 0;
+    const badEdges = [...eoResult.badEdges];
     const eSlicePositions = ['FR', 'FL', 'BR', 'BL'];
     EDGES.forEach(e => {
       const c1 = cubeState[e.f1];
       const c2 = cubeState[e.f2];
-      const hasUD = (c1 === U || c1 === D || c2 === U || c2 === D);
+      const hasUD = (c1 === uColor || c1 === dColor || c2 === uColor || c2 === dColor);
+      const isEposition = eSlicePositions.includes(e.name);
       if (!hasUD) {
         // This is an E-slice piece. Is it in an E-slice position?
-        if (eSlicePositions.includes(e.name)) {
+        if (isEposition) {
           eSliceCorrect++;
+        } else {
+          if (!badEdges.some(be => be.name === e.name)) badEdges.push(e);
+        }
+      } else {
+        // U/D edge in E-slice position is misplaced
+        if (isEposition) {
+          if (!badEdges.some(be => be.name === e.name)) badEdges.push(e);
         }
       }
     });
@@ -655,6 +667,7 @@
       eoResult,
       cornersOriented: orientedCornersCount,
       badCorners,
+      badEdges,
       eSliceEdgesInSlice: eSliceCorrect
     };
   }

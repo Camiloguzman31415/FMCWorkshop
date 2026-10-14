@@ -392,6 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (edge) {
           if (eoFB.badEdges.some(be => be.name === edge.name)) {
             hex = HIGHLIGHT_BAD_COLOR;
+          } else if (eoFB.isSolved) {
+            hex = HIGHLIGHT_GOOD_COLOR;
+          } else {
+            isDimmed = true;
           }
         } else {
           isDimmed = true;
@@ -400,6 +404,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (edge) {
           if (eoRL.badEdges.some(be => be.name === edge.name)) {
             hex = HIGHLIGHT_BAD_COLOR;
+          } else if (eoRL.isSolved) {
+            hex = HIGHLIGHT_GOOD_COLOR;
+          } else {
+            isDimmed = true;
           }
         } else {
           isDimmed = true;
@@ -408,20 +416,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (edge) {
           if (eoUD.badEdges.some(be => be.name === edge.name)) {
             hex = HIGHLIGHT_BAD_COLOR;
+          } else if (eoUD.isSolved) {
+            hex = HIGHLIGHT_GOOD_COLOR;
+          } else {
+            isDimmed = true;
           }
         } else {
           isDimmed = true;
         }
       } else if (mode === 'DR_UD') {
         if (edge) {
-          // In DR, edges must have EO solved on FB, and E-slice edges must be in E-slice
-          if (eoFB.badEdges.some(be => be.name === edge.name)) {
+          if (drUD.badEdges.some(be => be.name === edge.name)) {
             hex = HIGHLIGHT_BAD_COLOR;
+          } else if (drUD.isDR) {
+            hex = HIGHLIGHT_GOOD_COLOR;
+          } else {
+            isDimmed = true;
           }
         } else if (corner) {
-          // Bad corners have white/yellow not on U/D
           if (drUD.badCorners.some(bc => bc.name === corner.name)) {
             hex = HIGHLIGHT_BAD_COLOR;
+          } else if (drUD.isDR) {
+            hex = HIGHLIGHT_GOOD_COLOR;
+          } else {
+            isDimmed = true;
           }
         } else {
           isDimmed = true;
