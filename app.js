@@ -1075,6 +1075,42 @@ document.addEventListener('DOMContentLoaded', () => {
   let timerElapsedSeconds = 0;
   let timerRemainingSeconds = 3600;
   let timerLastTimestamp = null;
+  let warned55Min = false;
+  let warned60Min = false;
+
+  // Web Audio alert chime for FMC milestones (55m warning & 60m limit)
+  function playAlertBeep(type = 'limit') {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'warning') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(784, ctx.currentTime); // G5
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.4);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.15); // E5
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.3); // G5
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.65);
+      }
+    } catch (e) {
+      // AudioContext blocked or not supported
+    }
+  }
 
   function formatTime(totalSeconds) {
     const sec = Math.max(0, Math.floor(totalSeconds));
@@ -1104,7 +1140,17 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (timerModeLabel) timerModeLabel.textContent = 'Cronómetro';
       timerDisplay.textContent = formatTime(timerElapsedSeconds);
-      fmcTimerWidget.classList.remove('warning', 'danger');
+
+      // Warning color coding when approaching or reaching 60 minutes
+      if (timerElapsedSeconds >= 3600) {
+        fmcTimerWidget.classList.add('danger');
+        fmcTimerWidget.classList.remove('warning');
+      } else if (timerElapsedSeconds >= 3300) {
+        fmcTimerWidget.classList.add('warning');
+        fmcTimerWidget.classList.remove('danger');
+      } else {
+        fmcTimerWidget.classList.remove('warning', 'danger');
+      }
     }
 
     if (timerRunning) {
@@ -1133,10 +1179,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (timerRemainingSeconds <= 0) {
           timerRemainingSeconds = 0;
           pauseTimer();
+          playAlertBeep('limit');
           showToast('¡Tiempo FMC finalizado (60 minutos)!');
         }
       } else {
         timerElapsedSeconds += deltaSec;
+
+        // 55 minutes warning (5 min remaining in standard FMC)
+        if (timerElapsedSeconds >= 3300 && !warned55Min) {
+          warned55Min = true;
+          playAlertBeep('warning');
+          showToast('¡Aviso FMC: 55 minutos cumplidos (quedan 5 min)!');
+        }
+
+        // 60 minutes limit reached: pause automatically and alert
+        if (timerElapsedSeconds >= 3600 && !warned60Min) {
+          warned60Min = true;
+          timerElapsedSeconds = 3600;
+          pauseTimer();
+          playAlertBeep('limit');
+          showToast('¡Tiempo límite alcanzado: 60 minutos (Fin de intento)!');
+        }
       }
       updateTimerUI();
     }, 200);
@@ -1166,6 +1229,8 @@ document.addEventListener('DOMContentLoaded', () => {
     pauseTimer();
     timerElapsedSeconds = 0;
     timerRemainingSeconds = 3600;
+    warned55Min = false;
+    warned60Min = false;
     updateTimerUI();
     showToast(timerMode === TIMER_MODES.FMC_60 ? 'Cronómetro restablecido a 60:00' : 'Cronómetro restablecido a 00:00');
   }

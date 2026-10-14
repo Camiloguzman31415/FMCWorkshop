@@ -725,6 +725,18 @@ html, body {
 .timer-widget.danger {
   border-color: rgba(248, 113, 113, 0.75);
   box-shadow: 0 0 12px rgba(248, 113, 113, 0.35);
+  animation: timerPulse 1.4s infinite alternate ease-in-out;
+}
+
+@keyframes timerPulse {
+  from {
+    border-color: rgba(248, 113, 113, 0.6);
+    box-shadow: 0 0 8px rgba(248, 113, 113, 0.25);
+  }
+  to {
+    border-color: rgba(248, 113, 113, 0.95);
+    box-shadow: 0 0 16px rgba(248, 113, 113, 0.5);
+  }
 }
 
 .timer-display {
