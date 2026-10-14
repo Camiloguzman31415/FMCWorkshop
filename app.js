@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const animSpeedSelect = document.getElementById('anim-speed');
   const perspectiveModeSelect = document.getElementById('perspective-mode');
   const btnResetCamera = document.getElementById('btn-reset-camera');
+  const btnResetView = document.getElementById('btn-reset-view');
 
   // Toast Container
   const toastContainer = document.getElementById('toast-container');
@@ -1128,13 +1129,21 @@ B2 L2 D2 F2//M slice (4/20)
     });
   });
 
-  // Reset Camera View
-  btnResetCamera.addEventListener('click', () => {
+  // Reset Camera View to Default
+  function resetCameraView() {
     camera.position.copy(defaultCameraPos);
     controls.target.set(0, 0, 0);
     controls.update();
-    showToast('Camera reset');
-  });
+    showToast('Posición del cubo restablecida');
+  }
+
+  if (btnResetView) {
+    btnResetView.addEventListener('click', resetCameraView);
+  }
+  if (btnResetCamera) {
+    btnResetCamera.addEventListener('click', resetCameraView);
+  }
+  canvas.addEventListener('dblclick', resetCameraView);
 
   // --- Parse URL Parameters on Load ---
   function loadFromURL() {

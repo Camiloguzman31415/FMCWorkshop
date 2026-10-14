@@ -200,7 +200,7 @@ html, body {
   left: 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   z-index: 5;
 }
 
@@ -208,7 +208,7 @@ html, body {
   background-color: #1a1a24;
   border: 1px solid var(--accent-purple);
   color: #f0f0f5;
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
@@ -218,11 +218,16 @@ html, body {
   gap: 6px;
   transition: all 0.2s;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  user-select: none;
 }
 
 .ctrl-btn:hover {
   background-color: #27263b;
   border-color: #6c63a5;
+}
+
+.ctrl-btn:active {
+  transform: scale(0.96);
 }
 
 .highlight-box {
