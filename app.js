@@ -302,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Active mathematical cube
   const currentCube = new FMC.CubeModel();
+  let isCurrentStateNiss = false;
 
   // --- Render 3D Cube Colors based on current mathematical state and highlight mode ---
   function updateCubeVisuals() {
@@ -352,7 +353,13 @@ document.addEventListener('DOMContentLoaded', () => {
       eoBadge.title = 'Orientación en los 3 ejes. Haz clic para alternar el resaltado entre F/B, R/L y U/D.';
     }
 
-    if (drUD.isDR) {
+    if (currentCube.isSolved()) {
+      statusBadge.textContent = 'Solved!';
+      statusBadge.className = 'badge badge-info';
+    } else if (isCurrentStateNiss) {
+      statusBadge.textContent = 'NISS (Inverse)';
+      statusBadge.className = 'badge badge-niss';
+    } else if (drUD.isDR) {
       statusBadge.textContent = 'DR Solved!';
       statusBadge.className = 'badge badge-info';
     } else if (mode.startsWith('DR')) {
@@ -637,6 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resetCubieTransforms();
     currentStep = step;
+    isCurrentStateNiss = false;
 
     scrubber.max = totalMoves;
     scrubber.value = step;
@@ -842,6 +850,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cube = new FMC.CubeModel();
 
+    isCurrentStateNiss = cursorInfo.isCurrentlyInverse;
+
     if (cursorInfo.isCurrentlyInverse) {
       // User is inside ( ... ) on INVERSE SCRAMBLE (NISS)
       const invNormal = FMC.invertAlg(cursorInfo.normalMoves.join(' '));
@@ -854,20 +864,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (cursorInfo.inverseMoves.length > 0) {
         cube.applyAlg(cursorInfo.inverseMoves.join(' '));
       }
-
-      statusBadge.textContent = 'NISS (Inverse)';
-      statusBadge.className = 'badge badge-niss';
     } else {
       // User is on NORMAL SCRAMBLE
+      // Inverted inverse moves act as a PRE-SCRAMBLE to the normal scramble!
       const invInverse = FMC.invertAlg(cursorInfo.inverseMoves.join(' '));
-      if (rawScramble) cube.applyAlg(rawScramble);
       if (invInverse) cube.applyAlg(invInverse);
+      if (rawScramble) cube.applyAlg(rawScramble);
       if (cursorInfo.normalMoves.length > 0) {
         cube.applyAlg(cursorInfo.normalMoves.join(' '));
       }
-
-      statusBadge.textContent = 'Normal';
-      statusBadge.className = 'badge badge-normal';
     }
 
     currentCube.state.set(cube.state);
