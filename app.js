@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
   scene.background = new THREE.Color(0x18191c);
 
   const camera = new THREE.PerspectiveCamera(40, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 100);
-  const defaultCameraPos = new THREE.Vector3(6.2, 5.4, 7.5);
+  const defaultCameraPos = new THREE.Vector3(4.75, 4.15, 5.75);
   camera.position.copy(defaultCameraPos);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
