@@ -269,37 +269,61 @@ html, body {
 }
 
 .badge {
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 5px 12px;
+  border-radius: 9999px;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.3px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
+  letter-spacing: 0.35px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+#eo-badge {
+  cursor: pointer;
+}
+
+#eo-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  filter: brightness(1.12);
+}
+
+#eo-badge:active {
+  transform: translateY(0);
 }
 
 .badge-normal {
-  background-color: rgba(33, 150, 243, 0.25);
-  border: 1px solid #2196f3;
-  color: #64b5f6;
+  background-color: rgba(13, 34, 58, 0.92);
+  border: 1px solid #38bdf8;
+  color: #f0f9ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .badge-niss {
-  background-color: rgba(255, 152, 0, 0.25);
-  border: 1px solid #ff9800;
-  color: #ffb74d;
+  background-color: rgba(56, 28, 6, 0.92);
+  border: 1px solid #fb923c;
+  color: #fff7ed;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .badge-info {
-  background-color: rgba(76, 175, 80, 0.25);
-  border: 1px solid #4caf50;
-  color: #81c784;
+  background-color: rgba(12, 46, 26, 0.92);
+  border: 1px solid #34d399;
+  color: #f0fdf4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .badge-warn {
-  background-color: rgba(244, 67, 54, 0.25);
-  border: 1px solid #f44336;
-  color: #ef5350;
+  background-color: rgba(60, 14, 20, 0.94);
+  border: 1px solid #f87171;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 /* 3D Canvas Container */
