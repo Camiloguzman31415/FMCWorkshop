@@ -114,6 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
     autoResizeScramble();
   }
   window.addEventListener('resize', onResize);
+  if (typeof ResizeObserver !== 'undefined' && canvasContainer) {
+    const ro = new ResizeObserver(() => onResize());
+    ro.observe(canvasContainer);
+  }
 
   // --- Rubik's Cube 3D Geometry ---
   const cubeRootGroup = new THREE.Group();
