@@ -1129,21 +1129,97 @@ B2 L2 D2 F2//M slice (4/20)
     });
   });
 
-  // Reset Camera View to Default
-  function resetCameraView() {
-    camera.position.copy(defaultCameraPos);
-    controls.target.set(0, 0, 0);
-    controls.update();
-    showToast('Posición del cubo restablecida');
+  // Reset Camera View to Default with Smooth Spherical Animation
+  let cameraAnimId = null;
+
+  function easeInOutCubic(x) {
+    return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
   }
 
+  function resetCameraView(duration = 500) {
+    if (cameraAnimId) {
+      cancelAnimationFrame(cameraAnimId);
+      cameraAnimId = null;
+    }
+
+    const startTarget = controls.target.clone();
+    const endTarget = new THREE.Vector3(0, 0, 0);
+
+    // Camera offset vectors relative to their targets
+    const startOffset = camera.position.clone().sub(startTarget);
+    const endOffset = defaultCameraPos.clone().sub(endTarget);
+
+    // If camera is already essentially in default position, skip animation
+    if (camera.position.distanceTo(defaultCameraPos) < 0.05 && startTarget.distanceTo(endTarget) < 0.05) {
+      camera.position.copy(defaultCameraPos);
+      controls.target.set(0, 0, 0);
+      controls.update();
+      showToast('Posición del cubo restablecida');
+      return;
+    }
+
+    // Convert offsets to spherical coordinates for natural orbiting around the cube
+    const s1 = new THREE.Spherical().setFromVector3(startOffset);
+    const s2 = new THREE.Spherical().setFromVector3(endOffset);
+
+    // Calculate shortest angular path in theta around the Y axis
+    let deltaTheta = s2.theta - s1.theta;
+    while (deltaTheta > Math.PI) deltaTheta -= 2 * Math.PI;
+    while (deltaTheta < -Math.PI) deltaTheta += 2 * Math.PI;
+
+    const deltaPhi = s2.phi - s1.phi;
+    const deltaRadius = s2.radius - s1.radius;
+
+    const startTime = performance.now();
+
+    function stepCamera(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+
+      // Interpolate spherical orbit
+      const curTheta = s1.theta + deltaTheta * eased;
+      const curPhi = s1.phi + deltaPhi * eased;
+      const curRadius = s1.radius + deltaRadius * eased;
+
+      const curSpherical = new THREE.Spherical(curRadius, curPhi, curTheta);
+      const curOffset = new THREE.Vector3().setFromSpherical(curSpherical);
+
+      // Interpolate target in case of panning
+      const curTarget = new THREE.Vector3().lerpVectors(startTarget, endTarget, eased);
+      controls.target.copy(curTarget);
+      camera.position.copy(curTarget).add(curOffset);
+      controls.update();
+
+      if (progress < 1) {
+        cameraAnimId = requestAnimationFrame(stepCamera);
+      } else {
+        camera.position.copy(defaultCameraPos);
+        controls.target.set(0, 0, 0);
+        controls.update();
+        cameraAnimId = null;
+        showToast('Posición del cubo restablecida');
+      }
+    }
+
+    cameraAnimId = requestAnimationFrame(stepCamera);
+  }
+
+  // Cancel camera reset animation if user begins interacting manually
+  canvas.addEventListener('pointerdown', () => {
+    if (cameraAnimId) {
+      cancelAnimationFrame(cameraAnimId);
+      cameraAnimId = null;
+    }
+  });
+
   if (btnResetView) {
-    btnResetView.addEventListener('click', resetCameraView);
+    btnResetView.addEventListener('click', () => resetCameraView());
   }
   if (btnResetCamera) {
-    btnResetCamera.addEventListener('click', resetCameraView);
+    btnResetCamera.addEventListener('click', () => resetCameraView());
   }
-  canvas.addEventListener('dblclick', resetCameraView);
+  canvas.addEventListener('dblclick', () => resetCameraView());
 
   // --- Parse URL Parameters on Load ---
   function loadFromURL() {
