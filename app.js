@@ -1181,9 +1181,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnTimerStart) btnTimerStart.addEventListener('click', toggleTimer);
-  if (timerDisplay) timerDisplay.addEventListener('click', toggleTimer);
   if (btnTimerReset) btnTimerReset.addEventListener('click', resetTimer);
   if (btnTimerMode) btnTimerMode.addEventListener('click', toggleTimerMode);
+
+  if (timerDisplay) {
+    timerDisplay.addEventListener('click', toggleTimer);
+    timerDisplay.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      toggleTimerMode();
+    });
+  }
 
   updateTimerUI();
 

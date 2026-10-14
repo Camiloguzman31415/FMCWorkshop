@@ -223,23 +223,15 @@
         <div class="action-buttons-container">
           <!-- FMC Timer Widget -->
           <div class="timer-widget" id="fmc-timer-widget">
-            <div class="timer-header">
-              <button class="timer-mode-btn" id="btn-timer-mode" title="Cambiar modo: Cuenta atrás FMC (60m) o Cronómetro libre">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
-                  <path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a8.994 8.994 0 0 0 7.03-14.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
-                </svg>
-                <span id="timer-mode-label">60m FMC</span>
-              </button>
+            <span class="timer-display" id="timer-display" title="Haz clic para iniciar o pausar">60:00</span>
+            <div class="timer-actions">
               <button class="timer-icon-btn" id="btn-timer-reset" title="Reiniciar cronómetro">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
                   <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.77 20 14.44 20 13c0-4.42-3.58-8-8-8zm-6.7 2.8L3.84 9.26C3.31 10.45 3 11.69 3 13c0 4.42 3.58 8 8 8v4l5-5-5-5v4c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8z"/>
                 </svg>
               </button>
-            </div>
-            <div class="timer-body">
-              <span class="timer-display" id="timer-display" title="Haz clic para iniciar o pausar">60:00</span>
               <button class="timer-start-btn" id="btn-timer-start" title="Iniciar / Pausar cronómetro">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" id="timer-start-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="timer-start-icon">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               </button>
