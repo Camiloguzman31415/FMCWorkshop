@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnReset = document.getElementById('btn-reset');
   const btnRandom = document.getElementById('btn-random');
   const btnRemoveComments = document.getElementById('btn-remove-comments');
-  const btnCopyState = document.getElementById('btn-copy-state');
+  const btnCopySolution = document.getElementById('btn-copy-solution') || document.getElementById('btn-copy-state');
   const btnCopyShare = document.getElementById('btn-copy-share');
   const btnInvert = document.getElementById('btn-invert');
   const btnNewRecon = document.getElementById('btn-new-recon');
@@ -1296,15 +1296,62 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Comments removed');
   });
 
-  // Copy State (NISSY compatible format)
-  btnCopyState.addEventListener('click', () => {
-    const scramble = scrambleInput.value.trim();
-    const moves = parsedSolution.finalResultStr;
-    const nissyString = `${scramble} ${moves}`.trim();
-    navigator.clipboard.writeText(nissyString).then(() => {
-      showToast('Cube state copied (NISSY compatible)!');
+  // Copy Solution (Scramble + Steps + Result)
+  if (btnCopySolution) {
+    btnCopySolution.addEventListener('click', () => {
+      const title = titleInput ? titleInput.value.trim() : '';
+      const scramble = scrambleInput ? scrambleInput.value.trim() : '';
+      const steps = movesInput ? movesInput.value.trim() : '';
+      const result = (parsedSolution && parsedSolution.finalMoves && parsedSolution.finalMoves.length > 0)
+        ? parsedSolution.finalResultStr
+        : '';
+      const ftm = (parsedSolution && parsedSolution.ftm) ? parsedSolution.ftm : 0;
+
+      const sections = [];
+      if (title) sections.push(title);
+      if (scramble) sections.push(`Scramble: ${scramble}`);
+      if (steps) sections.push(steps);
+      if (result) {
+        sections.push(`Result: ${result} (${ftm} moves)`);
+      }
+
+      const fullSolutionText = sections.join('\n\n');
+
+      if (!fullSolutionText) {
+        showToast('No hay datos para copiar');
+        return;
+      }
+
+      const copyToClipboard = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(fullSolutionText);
+        }
+        return new Promise((resolve, reject) => {
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = fullSolutionText;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            const success = document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (success) resolve();
+            else reject(new Error('execCommand failed'));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      };
+
+      copyToClipboard().then(() => {
+        showToast('¡Solución copiada al portapapeles!');
+      }).catch(() => {
+        showToast('Error al copiar al portapapeles');
+      });
     });
-  });
+  }
 
   // Copy / Share URL
   btnCopyShare.addEventListener('click', () => {
