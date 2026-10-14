@@ -639,24 +639,17 @@ html, body {
 /* Action Buttons Container */
 .action-buttons-container {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
   margin-top: 6px;
   margin-bottom: 12px;
+  width: 100%;
 }
 
 .action-buttons-row {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.action-buttons-subrow {
-  display: flex;
-  justify-content: flex-end;
-  /* Aligns Invert under the right section */
-  padding-right: 90px;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: nowrap;
 }
 
 .action-tile {
@@ -664,14 +657,15 @@ html, body {
   border: 1px solid var(--border-color);
   color: #f0f0f4;
   border-radius: var(--radius-md);
-  padding: 10px 14px;
-  min-width: 78px;
-  min-height: 64px;
+  padding: 8px 8px;
+  min-width: 62px;
+  flex: 0 1 84px;
+  min-height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
   user-select: none;
   transition: all 0.18s ease;
@@ -700,6 +694,7 @@ html, body {
   font-weight: 500;
   text-align: center;
   white-space: nowrap;
+  line-height: 1.15;
 }
 
 /* Modal Styling */
