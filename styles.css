@@ -566,6 +566,10 @@ html, body {
 
 #moves-input {
   min-height: 140px;
+  height: auto;
+  resize: vertical;
+  overflow-y: hidden;
+  field-sizing: content;
 }
 
 /* FMC Banner and Displays */

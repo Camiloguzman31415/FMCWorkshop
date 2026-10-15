@@ -106,8 +106,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Auto-resize scramble textarea to fit content with no dead space
   function autoResizeScramble() {
     if (!scrambleInput) return;
+    const currentScrollY = window.scrollY;
     scrambleInput.style.height = 'auto';
     scrambleInput.style.height = Math.max(42, scrambleInput.scrollHeight + 2) + 'px';
+    if (window.scrollY !== currentScrollY) {
+      window.scrollTo(window.scrollX, currentScrollY);
+    }
+  }
+
+  // Auto-resize moves textarea to fit content dynamically, preserving standard initial height
+  const DEFAULT_MOVES_HEIGHT = 140;
+  function autoResizeMoves() {
+    if (!movesInput) return;
+    const currentScrollY = window.scrollY;
+    movesInput.style.height = 'auto';
+    movesInput.style.height = Math.max(DEFAULT_MOVES_HEIGHT, movesInput.scrollHeight + 2) + 'px';
+    if (window.scrollY !== currentScrollY) {
+      window.scrollTo(window.scrollX, currentScrollY);
+    }
   }
 
   // Resize handler
@@ -119,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
     autoResizeScramble();
+    autoResizeMoves();
   }
   window.addEventListener('resize', onResize);
   if (typeof ResizeObserver !== 'undefined' && canvasContainer) {
@@ -863,8 +880,9 @@ document.addEventListener('DOMContentLoaded', () => {
       resultDisplay.classList.add('empty');
     }
 
-    // Auto-adjust scramble input height
+    // Auto-adjust textarea heights
     autoResizeScramble();
+    autoResizeMoves();
 
     // Reset or clamp current step
     setStep(currentStep);
@@ -938,6 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   movesInput.addEventListener('input', () => {
+    autoResizeMoves();
     updateSolution();
     updateCubeFromCursor();
   });
