@@ -926,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCubeVisuals();
 
     const totalMoves = parsedSolution.finalMoves.length;
-    const step = cursorInfo.totalStep;
+    const step = Math.min(cursorInfo.totalStep, totalMoves);
     currentStep = step;
     scrubber.max = totalMoves;
     scrubber.value = step;

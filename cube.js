@@ -372,6 +372,125 @@
     return { resolvedText, insertionDefs };
   }
 
+  // Simplify move sequences by canceling redundant moves,
+  // including same-face combinations (e.g. F2 F -> F', F F' -> cancel)
+  // and commuting opposite-face moves (e.g. U D U' -> D, R L R' -> L).
+  function simplifyMoves(movesInput) {
+    if (!movesInput) return [];
+    const rawTokens = Array.isArray(movesInput)
+      ? movesInput
+      : String(movesInput).trim().split(/\s+/).filter(Boolean);
+
+    if (rawTokens.length === 0) return [];
+
+    const AXIS_MAP = {
+      'U': 'UD', 'D': 'UD',
+      'R': 'RL', 'L': 'RL',
+      'F': 'FB', 'B': 'FB'
+    };
+
+    function parseMove(m) {
+      if (!m || typeof m !== 'string') return null;
+      const str = m.trim();
+      if (!str) return null;
+
+      const match = str.match(/^([UDFBLR]|[udfblr]|[UDFBLR]w|[udfblr]w|[MESxyz])(['234]*)$/);
+      if (!match) return null;
+
+      const base = match[1];
+      const mod = match[2];
+      let amount = 1;
+      if (mod.includes('4') || mod === '0') {
+        amount = 0;
+      } else if (mod.includes('2')) {
+        amount = 2;
+      } else if (mod.includes("'") || mod.includes('3')) {
+        amount = 3;
+      }
+
+      const upper = base.toUpperCase();
+      const axis = (base.length === 1 && AXIS_MAP[upper]) ? AXIS_MAP[upper] : null;
+
+      return { orig: str, base, axis, amount };
+    }
+
+    function singlePassSimplify(tokens) {
+      const stack = [];
+
+      for (const token of tokens) {
+        const parsed = parseMove(token);
+        if (!parsed) {
+          stack.push({ orig: token, base: null, axis: null, amount: 0 });
+          continue;
+        }
+
+        if (parsed.amount === 0) {
+          continue;
+        }
+
+        let merged = false;
+
+        if (parsed.axis) {
+          for (let i = stack.length - 1; i >= 0; i--) {
+            const prev = stack[i];
+
+            if (prev.axis !== parsed.axis) {
+              break;
+            }
+
+            if (prev.base === parsed.base) {
+              const newAmount = (prev.amount + parsed.amount) % 4;
+              if (newAmount === 0) {
+                stack.splice(i, 1);
+              } else {
+                prev.amount = newAmount;
+              }
+              merged = true;
+              break;
+            }
+          }
+        } else if (parsed.base) {
+          if (stack.length > 0 && stack[stack.length - 1].base === parsed.base) {
+            const prev = stack[stack.length - 1];
+            const newAmount = (prev.amount + parsed.amount) % 4;
+            if (newAmount === 0) {
+              stack.pop();
+            } else {
+              prev.amount = newAmount;
+            }
+            merged = true;
+          }
+        }
+
+        if (!merged) {
+          stack.push(parsed);
+        }
+      }
+
+      return stack.map(item => {
+        if (!item.base) return item.orig;
+        if (item.amount === 1) return item.base;
+        if (item.amount === 2) return item.base + '2';
+        if (item.amount === 3) return item.base + "'";
+        return item.orig;
+      });
+    }
+
+    let current = rawTokens;
+    let changed = true;
+    let guard = 0;
+    while (changed && guard < 10) {
+      guard++;
+      changed = false;
+      const next = singlePassSimplify(current);
+      if (next.length !== current.length || next.some((m, idx) => m !== current[idx])) {
+        changed = true;
+        current = next;
+      }
+    }
+    return current;
+  }
+
   // Parse FMC Moves Input:
   // Handles comments (//...), insertions (@, @@, @1, *, **, *1, [1], etc.), and NISS parentheses ( ... )
   function parseFMCSolution(inputText) {
@@ -476,12 +595,14 @@
 
     // Final result: Normal moves followed by inverse of inverse moves
     const invertedInverse = [...inverseMoves].reverse().map(invertMove);
-    const finalMoves = [...normalMoves, ...invertedInverse];
+    const rawFinalMoves = [...normalMoves, ...invertedInverse];
+    const finalMoves = simplifyMoves(rawFinalMoves);
 
     return {
       normalMoves,
       inverseMoves,
       invertedInverse,
+      rawFinalMoves,
       finalMoves,
       finalResultStr: finalMoves.join(' '),
       ftm: finalMoves.length,
@@ -816,6 +937,7 @@
     invertAlg,
     expandCommutators,
     resolveInsertions,
+    simplifyMoves,
     parseFMCSolution,
     parseFMCAtCursor,
     checkEO,
