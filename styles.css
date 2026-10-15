@@ -514,16 +514,15 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
   width: 100%;
-  min-height: 38px;
+  min-height: auto;
+  margin-bottom: 4px;
 }
 
 .title-input {
   flex: 1;
-  min-width: 180px;
-  max-width: 320px;
+  width: 100%;
+  max-width: 100%;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -551,11 +550,9 @@ html, body {
   font-weight: 500;
 }
 
+/* Hidden by default as user preferred clean UI with permanent defaults */
 .notation-controls-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: none !important;
 }
 
 .ctrl-pill {
