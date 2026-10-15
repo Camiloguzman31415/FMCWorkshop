@@ -1569,14 +1569,27 @@ B2 L2 D2 F2//M slice (4/20)
     'IBM Plex Mono': "'IBM Plex Mono', 'Roboto Mono', monospace",
     'Roboto Mono': "'Roboto Mono', 'JetBrains Mono', monospace",
     'Source Code Pro': "'Source Code Pro', 'JetBrains Mono', monospace",
+    'Martian Mono': "'Martian Mono', 'JetBrains Mono', monospace",
     'Overpass Mono': "'Overpass Mono', 'JetBrains Mono', monospace",
     'Red Hat Mono': "'Red Hat Mono', 'JetBrains Mono', monospace",
+    'B612 Mono': "'B612 Mono', monospace",
     'Anonymous Pro': "'Anonymous Pro', monospace",
+    'Spline Sans Mono': "'Spline Sans Mono', monospace",
+    'DM Mono': "'DM Mono', monospace",
+    'Fira Mono': "'Fira Mono', 'JetBrains Mono', monospace",
+    'Fragment Mono': "'Fragment Mono', monospace",
     'Space Mono': "'Space Mono', monospace",
     'Ubuntu Mono': "'Ubuntu Mono', monospace",
     'Cascadia Code': "'Cascadia Code', 'JetBrains Mono', monospace",
     'Inconsolata': "'Inconsolata', 'Roboto Mono', monospace",
-    'Courier Prime': "'Courier Prime', monospace"
+    'Cousine': "'Cousine', monospace",
+    'Courier Prime': "'Courier Prime', monospace",
+    'Cutive Mono': "'Cutive Mono', monospace",
+    'Share Tech Mono': "'Share Tech Mono', monospace",
+    'Syne Mono': "'Syne Mono', monospace",
+    'Nova Mono': "'Nova Mono', monospace",
+    'Major Mono Display': "'Major Mono Display', monospace",
+    'VT323': "'VT323', monospace"
   };
 
   const SIZE_PRESETS = {
