@@ -234,6 +234,21 @@
             <button type="button" id="btn-toggle-bold" class="ctrl-pill-btn active" title="Alternar Negrita (Bold) en textos de notación">
               <b>B</b>
             </button>
+
+            <!-- Comment Color Selector -->
+            <div class="ctrl-pill" title="Color de los comentarios en los pasos">
+              <label for="comment-color-select" class="ctrl-pill-label">Color Comentarios:</label>
+              <select id="comment-color-select" class="ctrl-pill-select">
+                <option value="#059669" selected>Verde Esmeralda (Defecto)</option>
+                <option value="#15803d">Verde Bosque</option>
+                <option value="#2563eb">Azul Clásico</option>
+                <option value="#0284c7">Azul Cielo</option>
+                <option value="#7c3aed">Púrpura / Violeta</option>
+                <option value="#d97706">Ámbar / Naranja</option>
+                <option value="#dc2626">Rojo Coral</option>
+                <option value="#64748b">Gris Pizarra</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -256,8 +271,11 @@
           </div>
         </div>
 
-        <!-- Moves Input Area -->
-        <textarea id="moves-input" class="fmc-textarea" placeholder="Enter Moves Here!" spellcheck="false" rows="6"></textarea>
+        <!-- Moves Input Area with Syntax Highlighting -->
+        <div class="fmc-editor-container" id="moves-editor-container">
+          <pre id="moves-highlight" class="fmc-editor-backdrop" aria-hidden="true"></pre>
+          <textarea id="moves-input" class="fmc-textarea fmc-editor-input" placeholder="Enter Moves Here!" spellcheck="false" rows="6"></textarea>
+        </div>
 
         <!-- Final Result Display -->
         <div class="fmc-box">
@@ -410,6 +428,20 @@
           <div class="setting-item">
             <label for="modal-setting-bold">Texto en Negrita (Bold):</label>
             <input type="checkbox" id="modal-setting-bold" checked style="width: 18px; height: 18px; cursor: pointer;">
+          </div>
+
+          <div class="setting-item">
+            <label for="modal-comment-color-select">Color de Comentarios (Pasos):</label>
+            <select id="modal-comment-color-select">
+              <option value="#059669" selected>Verde Esmeralda (Defecto)</option>
+              <option value="#15803d">Verde Bosque</option>
+              <option value="#2563eb">Azul Clásico</option>
+              <option value="#0284c7">Azul Cielo</option>
+              <option value="#7c3aed">Púrpura / Violeta</option>
+              <option value="#d97706">Ámbar / Naranja</option>
+              <option value="#dc2626">Rojo Coral</option>
+              <option value="#64748b">Gris Pizarra</option>
+            </select>
           </div>
 
           <div>

@@ -55,6 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalSizeSelect = document.getElementById('modal-size-select');
   const btnToggleBold = document.getElementById('btn-toggle-bold');
   const modalSettingBold = document.getElementById('modal-setting-bold');
+  const movesHighlight = document.getElementById('moves-highlight');
+  const commentColorSelect = document.getElementById('comment-color-select');
+  const modalCommentColorSelect = document.getElementById('modal-comment-color-select');
 
   let currentMinScrambleHeight = 60;
 
@@ -846,10 +849,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // --- FMC Steps Syntax Highlighting ---
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function highlightFMC(text) {
+    if (!text) return '';
+    const regex = /(\/\/[^\r\n]*|\/\*[\s\S]*?\*\/)/g;
+    let lastIndex = 0;
+    let result = '';
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        result += escapeHtml(text.substring(lastIndex, match.index));
+      }
+      result += '<span class="fmc-comment">' + escapeHtml(match[0]) + '</span>';
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      result += escapeHtml(text.substring(lastIndex));
+    }
+
+    if (text.endsWith('\n')) {
+      result += ' ';
+    }
+
+    return result;
+  }
+
+  function updateMovesHighlight() {
+    if (!movesHighlight || !movesInput) return;
+    movesHighlight.innerHTML = highlightFMC(movesInput.value);
+  }
+
   // --- Recalculate FMC inputs, Inverse Scramble & Result ---
   function updateSolution() {
     const rawScramble = scrambleInput.value.trim();
     const rawMoves = movesInput.value;
+
+    updateMovesHighlight();
 
     // 1. Calculate Inverse Scramble
     if (rawScramble) {
@@ -967,6 +1011,13 @@ document.addEventListener('DOMContentLoaded', () => {
     autoResizeMoves();
     updateSolution();
     updateCubeFromCursor();
+  });
+
+  movesInput.addEventListener('scroll', () => {
+    if (movesHighlight) {
+      movesHighlight.scrollTop = movesInput.scrollTop;
+      movesHighlight.scrollLeft = movesInput.scrollLeft;
+    }
   });
 
   // Click on movesInput updates cube state to that specific move!
@@ -1682,6 +1733,22 @@ B2 L2 D2 F2//M slice (4/20)
     }
   }
 
+  function applyCommentColor(color) {
+    if (!color) color = '#059669';
+    document.documentElement.style.setProperty('--color-comment', color);
+
+    try {
+      localStorage.setItem('fmc_comment_color', color);
+    } catch (e) {}
+
+    if (commentColorSelect && commentColorSelect.value !== color) {
+      commentColorSelect.value = color;
+    }
+    if (modalCommentColorSelect && modalCommentColorSelect.value !== color) {
+      modalCommentColorSelect.value = color;
+    }
+  }
+
   // Event Listeners
   if (fontSelect) {
     fontSelect.addEventListener('change', (e) => applyNotationFont(e.target.value));
@@ -1709,6 +1776,13 @@ B2 L2 D2 F2//M slice (4/20)
     });
   }
 
+  if (commentColorSelect) {
+    commentColorSelect.addEventListener('change', (e) => applyCommentColor(e.target.value));
+  }
+  if (modalCommentColorSelect) {
+    modalCommentColorSelect.addEventListener('change', (e) => applyCommentColor(e.target.value));
+  }
+
   // Load Saved Typography Settings
   try {
     const savedFont = localStorage.getItem('fmc_notation_font') || 'Cutive Mono';
@@ -1719,10 +1793,14 @@ B2 L2 D2 F2//M slice (4/20)
 
     const savedBold = localStorage.getItem('fmc_notation_bold') !== 'false';
     applyNotationBold(savedBold);
+
+    const savedCommentColor = localStorage.getItem('fmc_comment_color') || '#059669';
+    applyCommentColor(savedCommentColor);
   } catch (e) {
     applyNotationFont('Cutive Mono');
     applyNotationSize('xlarge');
     applyNotationBold(true);
+    applyCommentColor('#059669');
   }
 
   // --- Parse URL Parameters on Load ---

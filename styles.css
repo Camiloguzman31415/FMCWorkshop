@@ -27,6 +27,7 @@
   --font-inverse-size: 22px;
   --font-moves-size: 18.5px;
   --font-result-size: 18px;
+  --color-comment: #059669;
 }
 
 * {
@@ -707,15 +708,113 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   letter-spacing: 0.3px;
 }
 
-#moves-input {
-  font-size: var(--font-moves-size);
-  font-weight: var(--font-notation-weight);
+/* --- Syntax Highlighted FMC Moves Editor --- */
+.fmc-editor-container {
+  position: relative;
+  width: 100%;
+  border: 1px solid #d0d0d5;
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 140px;
+  box-sizing: border-box;
+}
+
+.fmc-editor-container:focus-within {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.25);
+}
+
+.fmc-editor-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0 !important;
+  padding: 10px 14px !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+  font-family: var(--font-notation) !important;
+  font-size: var(--font-moves-size) !important;
+  font-weight: var(--font-notation-weight) !important;
+  letter-spacing: 0.25px !important;
+  line-height: 1.5 !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  tab-size: 2 !important;
+  -moz-tab-size: 2 !important;
+  color: #111111;
+  background: transparent !important;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.fmc-editor-input {
+  position: relative;
+  display: block;
+  width: 100% !important;
   min-height: 140px;
   height: auto;
+  margin: 0 !important;
+  padding: 10px 14px !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  font-family: var(--font-notation) !important;
+  font-size: var(--font-moves-size) !important;
+  font-weight: var(--font-notation-weight) !important;
+  letter-spacing: 0.25px !important;
+  line-height: 1.5 !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  tab-size: 2 !important;
+  -moz-tab-size: 2 !important;
+  background-color: transparent !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  caret-color: #111111;
+  z-index: 1;
   resize: vertical;
   overflow-y: hidden;
   field-sizing: content;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+.fmc-editor-input::placeholder {
+  color: #757575 !important;
+  -webkit-text-fill-color: #757575 !important;
+  opacity: 1 !important;
+}
+
+.fmc-editor-input::selection {
+  background-color: rgba(33, 150, 243, 0.3) !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.fmc-comment {
+  color: var(--color-comment, #059669);
+  font-style: normal;
+}
+
+/* Comment Color Presets styling */
+#comment-color-select option[value="#059669"], #modal-comment-color-select option[value="#059669"] { color: #059669; font-weight: 700; }
+#comment-color-select option[value="#15803d"], #modal-comment-color-select option[value="#15803d"] { color: #15803d; font-weight: 700; }
+#comment-color-select option[value="#2563eb"], #modal-comment-color-select option[value="#2563eb"] { color: #2563eb; font-weight: 700; }
+#comment-color-select option[value="#0284c7"], #modal-comment-color-select option[value="#0284c7"] { color: #0284c7; font-weight: 700; }
+#comment-color-select option[value="#7c3aed"], #modal-comment-color-select option[value="#7c3aed"] { color: #7c3aed; font-weight: 700; }
+#comment-color-select option[value="#d97706"], #modal-comment-color-select option[value="#d97706"] { color: #d97706; font-weight: 700; }
+#comment-color-select option[value="#dc2626"], #modal-comment-color-select option[value="#dc2626"] { color: #dc2626; font-weight: 700; }
+#comment-color-select option[value="#64748b"], #modal-comment-color-select option[value="#64748b"] { color: #64748b; font-weight: 700; }
 
 /* FMC Banner and Displays */
 .fmc-box {
