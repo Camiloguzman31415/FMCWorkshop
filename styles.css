@@ -101,35 +101,13 @@ html, body {
 }
 
 .brand-name {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.3px;
   color: #ffffff;
   display: flex;
   align-items: center;
   line-height: 1.1;
-}
-
-.brand-fmc {
-  background: linear-gradient(135deg, #00e5ff 0%, #2979ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 900;
-  letter-spacing: -0.5px;
-}
-
-.brand-workshop {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-.brand-badge {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  color: #83879a;
-  text-transform: uppercase;
-  margin-top: 1px;
 }
 
 .header-actions {
