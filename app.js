@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!scrambleInput) return;
     const currentScrollY = window.scrollY;
     scrambleInput.style.height = 'auto';
-    scrambleInput.style.height = Math.max(42, scrambleInput.scrollHeight + 2) + 'px';
+    scrambleInput.style.height = Math.max(48, scrambleInput.scrollHeight + 2) + 'px';
     if (window.scrollY !== currentScrollY) {
       window.scrollTo(window.scrollX, currentScrollY);
     }

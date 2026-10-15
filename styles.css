@@ -566,11 +566,21 @@ html, body {
 }
 
 #scramble-input {
-  min-height: 42px;
-  height: 42px;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+  min-height: 48px;
+  height: 48px;
   resize: vertical;
   overflow-y: hidden;
   field-sizing: content;
+}
+
+#inverse-scramble-display {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 #moves-input {
