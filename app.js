@@ -1646,7 +1646,7 @@ B2 L2 D2 F2//M slice (4/20)
   const SIZE_PRESETS = {
     custom: {
       scramble: '22px', // Mezcla: Grande
-      inverse: '19px',  // Inversa: Grande
+      inverse: '22px',  // Inversa: igual que mezcla (22px)
       moves: '21px',    // Pasos: Gigante
       result: '16px',   // Resultado: Grande
       minScramble: 52
