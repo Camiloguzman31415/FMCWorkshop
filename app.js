@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const commentColorSelect = document.getElementById('comment-color-select');
   const modalCommentColorSelect = document.getElementById('modal-comment-color-select');
 
-  let currentMinScrambleHeight = 52;
+  let currentMinScrambleHeight = 50;
 
   // Toast Container
   const toastContainer = document.getElementById('toast-container');
@@ -1645,11 +1645,11 @@ B2 L2 D2 F2//M slice (4/20)
 
   const SIZE_PRESETS = {
     custom: {
-      scramble: '22px', // Mezcla: Grande
-      inverse: '22px',  // Inversa: igual que mezcla (22px)
-      moves: '21px',    // Pasos: Gigante
-      result: '16px',   // Resultado: Grande
-      minScramble: 52
+      scramble: '20px',
+      inverse: '20px',
+      moves: '22px',
+      result: '20px',
+      minScramble: 50
     },
     normal: {
       scramble: '18px',
