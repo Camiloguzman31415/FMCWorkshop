@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700&family=Fira+Code:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Inconsolata:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Roboto+Mono:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:ital,wght@0,400;0,700&family=Ubuntu+Mono:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700&family=Fira+Code:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Inconsolata:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Overpass+Mono:wght@400;600;700&family=Red+Hat+Mono:wght@400;600;700&family=Roboto+Mono:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:ital,wght@0,400;0,700&family=Ubuntu+Mono:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -181,26 +181,46 @@
 
       <!-- Right Column: Scramble, Moves, Result & Actions -->
       <section class="right-pane">
-        <!-- Title Input & Font Switcher -->
-        <div class="title-container">
+        <!-- Title & Notation Controls Toolbar -->
+        <div class="notation-toolbar">
           <input type="text" id="title-input" class="title-input" placeholder="Title">
-          <div class="font-selector-box" title="Cambiar tipografía de mezcla, pasos y resultado">
-            <svg class="font-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
-              <path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/>
-            </svg>
-            <label for="font-select" class="font-selector-label">Fuente:</label>
-            <select id="font-select" class="font-select">
-              <option value="JetBrains Mono" selected>JetBrains Mono</option>
-              <option value="Fira Code">Fira Code</option>
-              <option value="IBM Plex Mono">IBM Plex Mono</option>
-              <option value="Roboto Mono">Roboto Mono</option>
-              <option value="Source Code Pro">Source Code Pro</option>
-              <option value="Space Mono">Space Mono</option>
-              <option value="Ubuntu Mono">Ubuntu Mono</option>
-              <option value="Cascadia Code">Cascadia Code</option>
-              <option value="Inconsolata">Inconsolata</option>
-              <option value="Courier Prime">Courier Prime</option>
-            </select>
+          
+          <div class="notation-controls-group">
+            <!-- Font Selector -->
+            <div class="ctrl-pill" title="Cambiar tipo de letra de la mezcla y pasos">
+              <label for="font-select" class="ctrl-pill-label">Fuente:</label>
+              <select id="font-select" class="ctrl-pill-select">
+                <option value="JetBrains Mono" selected>JetBrains Mono</option>
+                <option value="Fira Code">Fira Code</option>
+                <option value="IBM Plex Mono">IBM Plex Mono</option>
+                <option value="Roboto Mono">Roboto Mono</option>
+                <option value="Source Code Pro">Source Code Pro</option>
+                <option value="Overpass Mono">Overpass Mono</option>
+                <option value="Red Hat Mono">Red Hat Mono</option>
+                <option value="Anonymous Pro">Anonymous Pro</option>
+                <option value="Space Mono">Space Mono</option>
+                <option value="Ubuntu Mono">Ubuntu Mono</option>
+                <option value="Cascadia Code">Cascadia Code</option>
+                <option value="Inconsolata">Inconsolata</option>
+                <option value="Courier Prime">Courier Prime</option>
+              </select>
+            </div>
+
+            <!-- Size Selector -->
+            <div class="ctrl-pill" title="Tamaño del texto de la mezcla y pasos">
+              <label for="size-select" class="ctrl-pill-label">Tamaño:</label>
+              <select id="size-select" class="ctrl-pill-select">
+                <option value="normal">Normal</option>
+                <option value="large" selected>Grande</option>
+                <option value="xlarge">Extra Grande</option>
+                <option value="giant">Gigante</option>
+              </select>
+            </div>
+
+            <!-- Bold Toggle Button -->
+            <button type="button" id="btn-toggle-bold" class="ctrl-pill-btn active" title="Alternar Negrita (Bold) en textos de notación">
+              <b>B</b>
+            </button>
           </div>
         </div>
 
@@ -340,12 +360,30 @@
               <option value="IBM Plex Mono">IBM Plex Mono</option>
               <option value="Roboto Mono">Roboto Mono</option>
               <option value="Source Code Pro">Source Code Pro</option>
+              <option value="Overpass Mono">Overpass Mono</option>
+              <option value="Red Hat Mono">Red Hat Mono</option>
+              <option value="Anonymous Pro">Anonymous Pro</option>
               <option value="Space Mono">Space Mono</option>
               <option value="Ubuntu Mono">Ubuntu Mono</option>
               <option value="Cascadia Code">Cascadia Code</option>
               <option value="Inconsolata">Inconsolata</option>
               <option value="Courier Prime">Courier Prime</option>
             </select>
+          </div>
+
+          <div class="setting-item">
+            <label for="modal-size-select">Tamaño de Texto de Notación:</label>
+            <select id="modal-size-select">
+              <option value="normal">Normal</option>
+              <option value="large">Grande</option>
+              <option value="xlarge">Extra Grande</option>
+              <option value="giant">Gigante</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <label for="modal-setting-bold">Texto en Negrita (Bold):</label>
+            <input type="checkbox" id="modal-setting-bold" checked style="width: 18px; height: 18px; cursor: pointer;">
           </div>
 
           <div>

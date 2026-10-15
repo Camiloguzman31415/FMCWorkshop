@@ -1,5 +1,5 @@
 /* styles.css - FMCWorkshop Styling */
-@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700&family=Fira+Code:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Inconsolata:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Roboto+Mono:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:ital,wght@0,400;0,700&family=Ubuntu+Mono:ital,wght@0,400;0,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700&family=Fira+Code:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Inconsolata:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Overpass+Mono:wght@400;600;700&family=Red+Hat+Mono:wght@400;600;700&family=Roboto+Mono:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:ital,wght@0,400;0,700&family=Ubuntu+Mono:ital,wght@0,400;0,700&display=swap');
 
 :root {
   --bg-main: #1e1e20;
@@ -22,6 +22,11 @@
   --radius-md: 6px;
   --radius-lg: 10px;
   --font-notation: 'JetBrains Mono', 'Roboto Mono', monospace;
+  --font-notation-weight: 700;
+  --font-scramble-size: 22px;
+  --font-inverse-size: 19px;
+  --font-moves-size: 16.5px;
+  --font-result-size: 16px;
 }
 
 * {
@@ -503,27 +508,29 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Title Input & Toolbar */
-.title-container {
-  position: relative;
+/* Title Input & Notation Controls Toolbar */
+.notation-toolbar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
   width: 100%;
   min-height: 38px;
 }
 
 .title-input {
-  width: 100%;
-  max-width: 380px;
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   color: #ffffff;
   font-size: 16px;
   font-weight: 600;
-  text-align: center;
-  padding: 6px 12px;
+  text-align: left;
+  padding: 6px 10px;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
 }
@@ -543,13 +550,17 @@ html, body {
   font-weight: 500;
 }
 
-/* Font Selector */
-.font-selector-box {
-  position: absolute;
-  right: 0;
+.notation-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ctrl-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.14);
   padding: 3px 8px;
@@ -558,26 +569,20 @@ html, body {
   user-select: none;
 }
 
-.font-selector-box:hover {
+.ctrl-pill:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.28);
 }
 
-.font-selector-box .font-icon {
-  color: #94a3b8;
-  flex-shrink: 0;
-}
-
-.font-selector-label {
+.ctrl-pill-label {
   font-size: 11px;
   font-weight: 700;
   color: #94a3b8;
-  letter-spacing: 0.4px;
-  cursor: pointer;
+  letter-spacing: 0.35px;
   text-transform: uppercase;
 }
 
-.font-select {
+.ctrl-pill-select {
   background: transparent;
   color: #f1f5f9;
   border: none;
@@ -586,19 +591,46 @@ html, body {
   cursor: pointer;
   outline: none;
   font-family: inherit;
-  padding: 2px 4px;
+  padding: 2px 2px;
   border-radius: 4px;
 }
 
-.font-select:focus {
+.ctrl-pill-select:focus {
   background: rgba(0, 0, 0, 0.4);
 }
 
-.font-select option,
-#modal-font-select option {
+.ctrl-pill-select option,
+#modal-font-select option,
+#modal-size-select option {
   background-color: #1a1a24;
   color: #ffffff;
   padding: 6px 10px;
+}
+
+.ctrl-pill-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #94a3b8;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.ctrl-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.ctrl-pill-btn.active {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
 }
 
 /* Individual preview styling for font options */
@@ -607,22 +639,14 @@ option[value="Fira Code"] { font-family: 'Fira Code', monospace; }
 option[value="IBM Plex Mono"] { font-family: 'IBM Plex Mono', monospace; }
 option[value="Roboto Mono"] { font-family: 'Roboto Mono', monospace; }
 option[value="Source Code Pro"] { font-family: 'Source Code Pro', monospace; }
+option[value="Overpass Mono"] { font-family: 'Overpass Mono', monospace; }
+option[value="Red Hat Mono"] { font-family: 'Red Hat Mono', monospace; }
+option[value="Anonymous Pro"] { font-family: 'Anonymous Pro', monospace; }
 option[value="Space Mono"] { font-family: 'Space Mono', monospace; }
 option[value="Ubuntu Mono"] { font-family: 'Ubuntu Mono', monospace; }
 option[value="Cascadia Code"] { font-family: 'Cascadia Code', monospace; }
 option[value="Inconsolata"] { font-family: 'Inconsolata', monospace; }
 option[value="Courier Prime"] { font-family: 'Courier Prime', monospace; }
-
-@media (max-width: 768px) {
-  .title-container {
-    flex-direction: column;
-    gap: 8px;
-  }
-  .font-selector-box {
-    position: static;
-    align-self: flex-end;
-  }
-}
 
 /* Textarea boxes */
 .fmc-textarea {
@@ -630,8 +654,9 @@ option[value="Courier Prime"] { font-family: 'Courier Prime', monospace; }
   background-color: #ffffff;
   color: #111111;
   font-family: var(--font-notation);
-  font-size: 14.5px;
-  letter-spacing: 0.2px;
+  font-size: var(--font-moves-size);
+  font-weight: var(--font-notation-weight);
+  letter-spacing: 0.25px;
   line-height: 1.5;
   padding: 10px 14px;
   border: 1px solid #d0d0d5;
@@ -652,24 +677,26 @@ option[value="Courier Prime"] { font-family: 'Courier Prime', monospace; }
 }
 
 #scramble-input {
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
+  font-size: var(--font-scramble-size);
+  font-weight: var(--font-notation-weight);
+  letter-spacing: 0.35px;
   line-height: 1.5;
-  min-height: 48px;
-  height: 48px;
+  min-height: 52px;
+  height: auto;
   resize: vertical;
   overflow-y: hidden;
   field-sizing: content;
 }
 
 #inverse-scramble-display {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: var(--font-inverse-size);
+  font-weight: var(--font-notation-weight);
   letter-spacing: 0.3px;
 }
 
 #moves-input {
+  font-size: var(--font-moves-size);
+  font-weight: var(--font-notation-weight);
   min-height: 140px;
   height: auto;
   resize: vertical;
@@ -743,10 +770,10 @@ option[value="Courier Prime"] { font-family: 'Courier Prime', monospace; }
   background-color: var(--grey-content);
   color: var(--grey-content-text);
   font-family: var(--font-notation);
-  font-size: 14px;
+  font-size: var(--font-result-size);
   letter-spacing: 0.2px;
   line-height: 1.5;
-  font-weight: 600;
+  font-weight: var(--font-notation-weight);
   padding: 10px 14px;
   min-height: 44px;
   word-break: break-word;

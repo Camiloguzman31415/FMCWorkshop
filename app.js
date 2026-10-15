@@ -51,6 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnResetView = document.getElementById('btn-reset-view');
   const fontSelect = document.getElementById('font-select');
   const modalFontSelect = document.getElementById('modal-font-select');
+  const sizeSelect = document.getElementById('size-select');
+  const modalSizeSelect = document.getElementById('modal-size-select');
+  const btnToggleBold = document.getElementById('btn-toggle-bold');
+  const modalSettingBold = document.getElementById('modal-setting-bold');
+
+  let currentMinScrambleHeight = 52;
 
   // Toast Container
   const toastContainer = document.getElementById('toast-container');
@@ -110,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!scrambleInput) return;
     const currentScrollY = window.scrollY;
     scrambleInput.style.height = 'auto';
-    scrambleInput.style.height = Math.max(48, scrambleInput.scrollHeight + 2) + 'px';
+    scrambleInput.style.height = Math.max(currentMinScrambleHeight, scrambleInput.scrollHeight + 2) + 'px';
     if (window.scrollY !== currentScrollY) {
       window.scrollTo(window.scrollX, currentScrollY);
     }
@@ -1556,18 +1562,52 @@ B2 L2 D2 F2//M slice (4/20)
   }
   canvas.addEventListener('dblclick', () => resetCameraView());
 
-  // --- Font Management for Scramble, Moves & Result ---
+  // --- Notation Typography, Size & Bold Management ---
   const FONT_MAP = {
     'JetBrains Mono': "'JetBrains Mono', 'Roboto Mono', monospace",
     'Fira Code': "'Fira Code', 'JetBrains Mono', monospace",
     'IBM Plex Mono': "'IBM Plex Mono', 'Roboto Mono', monospace",
     'Roboto Mono': "'Roboto Mono', 'JetBrains Mono', monospace",
     'Source Code Pro': "'Source Code Pro', 'JetBrains Mono', monospace",
+    'Overpass Mono': "'Overpass Mono', 'JetBrains Mono', monospace",
+    'Red Hat Mono': "'Red Hat Mono', 'JetBrains Mono', monospace",
+    'Anonymous Pro': "'Anonymous Pro', monospace",
     'Space Mono': "'Space Mono', monospace",
     'Ubuntu Mono': "'Ubuntu Mono', monospace",
     'Cascadia Code': "'Cascadia Code', 'JetBrains Mono', monospace",
     'Inconsolata': "'Inconsolata', 'Roboto Mono', monospace",
     'Courier Prime': "'Courier Prime', monospace"
+  };
+
+  const SIZE_PRESETS = {
+    normal: {
+      scramble: '18px',
+      inverse: '16.5px',
+      moves: '15px',
+      result: '14.5px',
+      minScramble: 46
+    },
+    large: {
+      scramble: '22px',
+      inverse: '19px',
+      moves: '16.5px',
+      result: '16px',
+      minScramble: 52
+    },
+    xlarge: {
+      scramble: '26px',
+      inverse: '22px',
+      moves: '18.5px',
+      result: '18px',
+      minScramble: 60
+    },
+    giant: {
+      scramble: '30px',
+      inverse: '25px',
+      moves: '21px',
+      result: '20px',
+      minScramble: 70
+    }
   };
 
   function applyNotationFont(fontName) {
@@ -1589,23 +1629,87 @@ B2 L2 D2 F2//M slice (4/20)
     autoResizeMoves();
   }
 
+  function applyNotationSize(sizeKey) {
+    if (!SIZE_PRESETS[sizeKey]) sizeKey = 'large';
+    const preset = SIZE_PRESETS[sizeKey];
+    currentMinScrambleHeight = preset.minScramble;
+    document.documentElement.style.setProperty('--font-scramble-size', preset.scramble);
+    document.documentElement.style.setProperty('--font-inverse-size', preset.inverse);
+    document.documentElement.style.setProperty('--font-moves-size', preset.moves);
+    document.documentElement.style.setProperty('--font-result-size', preset.result);
+
+    try {
+      localStorage.setItem('fmc_notation_size', sizeKey);
+    } catch (e) {}
+
+    if (sizeSelect && sizeSelect.value !== sizeKey) {
+      sizeSelect.value = sizeKey;
+    }
+    if (modalSizeSelect && modalSizeSelect.value !== sizeKey) {
+      modalSizeSelect.value = sizeKey;
+    }
+
+    autoResizeScramble();
+    autoResizeMoves();
+  }
+
+  function applyNotationBold(isBold) {
+    const weight = isBold ? '700' : '500';
+    document.documentElement.style.setProperty('--font-notation-weight', weight);
+
+    try {
+      localStorage.setItem('fmc_notation_bold', isBold ? 'true' : 'false');
+    } catch (e) {}
+
+    if (btnToggleBold) {
+      btnToggleBold.classList.toggle('active', isBold);
+    }
+    if (modalSettingBold && modalSettingBold.checked !== isBold) {
+      modalSettingBold.checked = isBold;
+    }
+  }
+
+  // Event Listeners
   if (fontSelect) {
-    fontSelect.addEventListener('change', (e) => {
-      applyNotationFont(e.target.value);
-    });
+    fontSelect.addEventListener('change', (e) => applyNotationFont(e.target.value));
   }
-
   if (modalFontSelect) {
-    modalFontSelect.addEventListener('change', (e) => {
-      applyNotationFont(e.target.value);
+    modalFontSelect.addEventListener('change', (e) => applyNotationFont(e.target.value));
+  }
+
+  if (sizeSelect) {
+    sizeSelect.addEventListener('change', (e) => applyNotationSize(e.target.value));
+  }
+  if (modalSizeSelect) {
+    modalSizeSelect.addEventListener('change', (e) => applyNotationSize(e.target.value));
+  }
+
+  if (btnToggleBold) {
+    btnToggleBold.addEventListener('click', () => {
+      const isCurrentlyBold = btnToggleBold.classList.contains('active');
+      applyNotationBold(!isCurrentlyBold);
+    });
+  }
+  if (modalSettingBold) {
+    modalSettingBold.addEventListener('change', (e) => {
+      applyNotationBold(e.target.checked);
     });
   }
 
+  // Load Saved Typography Settings
   try {
     const savedFont = localStorage.getItem('fmc_notation_font') || 'JetBrains Mono';
     applyNotationFont(savedFont);
+
+    const savedSize = localStorage.getItem('fmc_notation_size') || 'large';
+    applyNotationSize(savedSize);
+
+    const savedBold = localStorage.getItem('fmc_notation_bold') !== 'false';
+    applyNotationBold(savedBold);
   } catch (e) {
     applyNotationFont('JetBrains Mono');
+    applyNotationSize('large');
+    applyNotationBold(true);
   }
 
   // --- Parse URL Parameters on Load ---
