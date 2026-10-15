@@ -309,8 +309,71 @@
     return curr;
   }
 
+  // Resolve all insertions recursively (supporting nested insertions like @@ inside @, etc.)
+  function resolveInsertions(targetText, rawDefs) {
+    const insertionDefs = {};
+    for (const tag in rawDefs) {
+      insertionDefs[tag] = rawDefs[tag];
+    }
+
+    const getSortedKeys = (defs) => Object.keys(defs).sort((a, b) => b.length - a.length || a.localeCompare(b));
+    const MAX_PASSES = 30;
+
+    // 1. Resolve nested insertions inside insertion definitions themselves (e.g. @ contains @@)
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      let changed = false;
+      const sortedKeys = getSortedKeys(insertionDefs);
+
+      for (const tag of sortedKeys) {
+        const escaped = tag.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const reg = new RegExp(escaped, 'g');
+
+        for (const parentTag in insertionDefs) {
+          if (parentTag === tag) continue;
+          const oldVal = insertionDefs[parentTag];
+          if (reg.test(oldVal)) {
+            const newVal = oldVal.replace(reg, ' ' + insertionDefs[tag] + ' ');
+            if (newVal !== oldVal) {
+              insertionDefs[parentTag] = newVal;
+              changed = true;
+            }
+          }
+        }
+      }
+      if (!changed) break;
+    }
+
+    // 2. Expand commutators that might have been formed or nested in insertion definitions
+    for (const tag in insertionDefs) {
+      insertionDefs[tag] = expandCommutators(insertionDefs[tag]);
+    }
+
+    // 3. Resolve insertions in the target text (iteratively until no tags remain)
+    let resolvedText = targetText;
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      let changed = false;
+      const sortedKeys = getSortedKeys(insertionDefs);
+
+      for (const tag of sortedKeys) {
+        const escaped = tag.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const reg = new RegExp(escaped, 'g');
+
+        if (reg.test(resolvedText)) {
+          const newText = resolvedText.replace(reg, ' ' + insertionDefs[tag] + ' ');
+          if (newText !== resolvedText) {
+            resolvedText = newText;
+            changed = true;
+          }
+        }
+      }
+      if (!changed) break;
+    }
+
+    return { resolvedText, insertionDefs };
+  }
+
   // Parse FMC Moves Input:
-  // Handles comments (//...), insertions (@, @1, *, *1), and NISS parentheses ( ... )
+  // Handles comments (//...), insertions (@, @@, @1, *, **, *1, [1], etc.), and NISS parentheses ( ... )
   function parseFMCSolution(inputText) {
     if (!inputText) {
       return {
@@ -330,8 +393,8 @@
 
     for (let line of lines) {
       const trimmed = line.trim();
-      // Check for insertion definition: @=, @1=, @1:, *=, *1=, *1:, etc.
-      const insMatch = trimmed.match(/^([@*]+[0-9]*|\[[0-9]+\])\s*[:=]\s*(.+)$/i);
+      // Check for insertion definition: @=, @@=, @1=, @1:, *=, **=, *1=, [1]=, [C1]=, etc.
+      const insMatch = trimmed.match(/^([@*#%^+]+[0-9]*|\[[a-zA-Z0-9_-]+\])\s*[:=]\s*(.+)$/i);
       if (insMatch) {
         const tag = insMatch[1].trim();
         let val = insMatch[2].trim();
@@ -350,13 +413,9 @@
     fullBody = fullBody.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
     fullBody = expandCommutators(fullBody);
 
-    // Replace insertions in body
-    const sortedKeys = Object.keys(insertionDefs).sort((a, b) => b.length - a.length);
-    for (const tag of sortedKeys) {
-      const escaped = tag.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      const reg = new RegExp(escaped, 'g');
-      fullBody = fullBody.replace(reg, ' ' + insertionDefs[tag] + ' ');
-    }
+    // Replace insertions (including nested insertions)
+    const { resolvedText } = resolveInsertions(fullBody, insertionDefs);
+    fullBody = resolvedText;
 
     // Now parse NISS
     const normalMoves = [];
@@ -517,7 +576,7 @@
     const insertionDefs = {};
     for (let line of lines) {
       const trimmed = line.trim();
-      const insMatch = trimmed.match(/^([@*]+[0-9]*|\[[0-9]+\])\s*[:=]\s*(.+)$/i);
+      const insMatch = trimmed.match(/^([@*#%^+]+[0-9]*|\[[a-zA-Z0-9_-]+\])\s*[:=]\s*(.+)$/i);
       if (insMatch) {
         const tag = insMatch[1].trim();
         let val = insMatch[2].trim().replace(/\/\/.*$/, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
@@ -533,7 +592,7 @@
     let cleanLines = [];
     for (let i = 0; i < beforeLines.length; i++) {
       let line = beforeLines[i];
-      if (line.trim().match(/^([@*]+[0-9]*|\[[0-9]+\])\s*[:=]/)) {
+      if (line.trim().match(/^([@*#%^+]+[0-9]*|\[[a-zA-Z0-9_-]+\])\s*[:=]/i)) {
         continue;
       }
       const commentIdx = line.indexOf('//');
@@ -544,13 +603,11 @@
     }
 
     let code = cleanLines.join('\n');
+    code = code.replace(/\/\*[\s\S]*?\*\//g, '');
     code = expandCommutators(code);
 
-    const sortedKeys = Object.keys(insertionDefs).sort((a, b) => b.length - a.length);
-    for (const tag of sortedKeys) {
-      const escaped = tag.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      code = code.replace(new RegExp(escaped, 'g'), ' ' + insertionDefs[tag] + ' ');
-    }
+    const { resolvedText } = resolveInsertions(code, insertionDefs);
+    code = resolvedText;
 
     let normalMoves = [];
     let inverseMoves = [];
@@ -758,6 +815,7 @@
     invertMove,
     invertAlg,
     expandCommutators,
+    resolveInsertions,
     parseFMCSolution,
     parseFMCAtCursor,
     checkEO,
