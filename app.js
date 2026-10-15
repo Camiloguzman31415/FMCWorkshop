@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnToggleBold = document.getElementById('btn-toggle-bold');
   const modalSettingBold = document.getElementById('modal-setting-bold');
 
-  let currentMinScrambleHeight = 52;
+  let currentMinScrambleHeight = 60;
 
   // Toast Container
   const toastContainer = document.getElementById('toast-container');
@@ -1624,7 +1624,7 @@ B2 L2 D2 F2//M slice (4/20)
   };
 
   function applyNotationFont(fontName) {
-    if (!FONT_MAP[fontName]) fontName = 'JetBrains Mono';
+    if (!FONT_MAP[fontName]) fontName = 'Cutive Mono';
     const family = FONT_MAP[fontName];
     document.documentElement.style.setProperty('--font-notation', family);
     try {
@@ -1643,7 +1643,7 @@ B2 L2 D2 F2//M slice (4/20)
   }
 
   function applyNotationSize(sizeKey) {
-    if (!SIZE_PRESETS[sizeKey]) sizeKey = 'large';
+    if (!SIZE_PRESETS[sizeKey]) sizeKey = 'xlarge';
     const preset = SIZE_PRESETS[sizeKey];
     currentMinScrambleHeight = preset.minScramble;
     document.documentElement.style.setProperty('--font-scramble-size', preset.scramble);
@@ -1711,17 +1711,17 @@ B2 L2 D2 F2//M slice (4/20)
 
   // Load Saved Typography Settings
   try {
-    const savedFont = localStorage.getItem('fmc_notation_font') || 'JetBrains Mono';
+    const savedFont = localStorage.getItem('fmc_notation_font') || 'Cutive Mono';
     applyNotationFont(savedFont);
 
-    const savedSize = localStorage.getItem('fmc_notation_size') || 'large';
+    const savedSize = localStorage.getItem('fmc_notation_size') || 'xlarge';
     applyNotationSize(savedSize);
 
     const savedBold = localStorage.getItem('fmc_notation_bold') !== 'false';
     applyNotationBold(savedBold);
   } catch (e) {
-    applyNotationFont('JetBrains Mono');
-    applyNotationSize('large');
+    applyNotationFont('Cutive Mono');
+    applyNotationSize('xlarge');
     applyNotationBold(true);
   }
 
