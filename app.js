@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const commentColorSelect = document.getElementById('comment-color-select');
   const modalCommentColorSelect = document.getElementById('modal-comment-color-select');
 
-  let currentMinScrambleHeight = 60;
+  let currentMinScrambleHeight = 52;
 
   // Toast Container
   const toastContainer = document.getElementById('toast-container');
@@ -1644,6 +1644,13 @@ B2 L2 D2 F2//M slice (4/20)
   };
 
   const SIZE_PRESETS = {
+    custom: {
+      scramble: '22px', // Mezcla: Grande
+      inverse: '19px',  // Inversa: Grande
+      moves: '21px',    // Pasos: Gigante
+      result: '16px',   // Resultado: Grande
+      minScramble: 52
+    },
     normal: {
       scramble: '18px',
       inverse: '16.5px',
@@ -1694,7 +1701,7 @@ B2 L2 D2 F2//M slice (4/20)
   }
 
   function applyNotationSize(sizeKey) {
-    if (!SIZE_PRESETS[sizeKey]) sizeKey = 'xlarge';
+    if (!SIZE_PRESETS[sizeKey]) sizeKey = 'custom';
     const preset = SIZE_PRESETS[sizeKey];
     currentMinScrambleHeight = preset.minScramble;
     document.documentElement.style.setProperty('--font-scramble-size', preset.scramble);
@@ -1734,7 +1741,7 @@ B2 L2 D2 F2//M slice (4/20)
   }
 
   function applyCommentColor(color) {
-    if (!color) color = '#059669';
+    if (!color) color = '#dc2626';
     document.documentElement.style.setProperty('--color-comment', color);
 
     try {
@@ -1788,19 +1795,19 @@ B2 L2 D2 F2//M slice (4/20)
     const savedFont = localStorage.getItem('fmc_notation_font') || 'Cutive Mono';
     applyNotationFont(savedFont);
 
-    const savedSize = localStorage.getItem('fmc_notation_size') || 'xlarge';
+    const savedSize = localStorage.getItem('fmc_notation_size') || 'custom';
     applyNotationSize(savedSize);
 
     const savedBold = localStorage.getItem('fmc_notation_bold') !== 'false';
     applyNotationBold(savedBold);
 
-    const savedCommentColor = localStorage.getItem('fmc_comment_color') || '#059669';
+    const savedCommentColor = localStorage.getItem('fmc_comment_color') || '#dc2626';
     applyCommentColor(savedCommentColor);
   } catch (e) {
     applyNotationFont('Cutive Mono');
-    applyNotationSize('xlarge');
+    applyNotationSize('custom');
     applyNotationBold(true);
-    applyCommentColor('#059669');
+    applyCommentColor('#dc2626');
   }
 
   // --- Parse URL Parameters on Load ---

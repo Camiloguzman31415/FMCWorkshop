@@ -23,11 +23,11 @@
   --radius-lg: 10px;
   --font-notation: 'Cutive Mono', monospace;
   --font-notation-weight: 700;
-  --font-scramble-size: 26px;
-  --font-inverse-size: 22px;
-  --font-moves-size: 18.5px;
-  --font-result-size: 18px;
-  --color-comment: #059669;
+  --font-scramble-size: 22px;
+  --font-inverse-size: 19px;
+  --font-moves-size: 21px;
+  --font-result-size: 16px;
+  --color-comment: #dc2626;
 }
 
 * {
@@ -695,7 +695,7 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   font-weight: var(--font-notation-weight);
   letter-spacing: 0.35px;
   line-height: 1.5;
-  min-height: 60px;
+  min-height: 52px;
   height: auto;
   resize: vertical;
   overflow-y: hidden;
