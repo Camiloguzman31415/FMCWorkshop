@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const perspectiveModeSelect = document.getElementById('perspective-mode');
   const btnResetCamera = document.getElementById('btn-reset-camera');
   const btnResetView = document.getElementById('btn-reset-view');
+  const fontSelect = document.getElementById('font-select');
+  const modalFontSelect = document.getElementById('modal-font-select');
 
   // Toast Container
   const toastContainer = document.getElementById('toast-container');
@@ -1553,6 +1555,58 @@ B2 L2 D2 F2//M slice (4/20)
     btnResetCamera.addEventListener('click', () => resetCameraView());
   }
   canvas.addEventListener('dblclick', () => resetCameraView());
+
+  // --- Font Management for Scramble, Moves & Result ---
+  const FONT_MAP = {
+    'JetBrains Mono': "'JetBrains Mono', 'Roboto Mono', monospace",
+    'Fira Code': "'Fira Code', 'JetBrains Mono', monospace",
+    'IBM Plex Mono': "'IBM Plex Mono', 'Roboto Mono', monospace",
+    'Roboto Mono': "'Roboto Mono', 'JetBrains Mono', monospace",
+    'Source Code Pro': "'Source Code Pro', 'JetBrains Mono', monospace",
+    'Space Mono': "'Space Mono', monospace",
+    'Ubuntu Mono': "'Ubuntu Mono', monospace",
+    'Cascadia Code': "'Cascadia Code', 'JetBrains Mono', monospace",
+    'Inconsolata': "'Inconsolata', 'Roboto Mono', monospace",
+    'Courier Prime': "'Courier Prime', monospace"
+  };
+
+  function applyNotationFont(fontName) {
+    if (!FONT_MAP[fontName]) fontName = 'JetBrains Mono';
+    const family = FONT_MAP[fontName];
+    document.documentElement.style.setProperty('--font-notation', family);
+    try {
+      localStorage.setItem('fmc_notation_font', fontName);
+    } catch (e) {}
+
+    if (fontSelect && fontSelect.value !== fontName) {
+      fontSelect.value = fontName;
+    }
+    if (modalFontSelect && modalFontSelect.value !== fontName) {
+      modalFontSelect.value = fontName;
+    }
+
+    autoResizeScramble();
+    autoResizeMoves();
+  }
+
+  if (fontSelect) {
+    fontSelect.addEventListener('change', (e) => {
+      applyNotationFont(e.target.value);
+    });
+  }
+
+  if (modalFontSelect) {
+    modalFontSelect.addEventListener('change', (e) => {
+      applyNotationFont(e.target.value);
+    });
+  }
+
+  try {
+    const savedFont = localStorage.getItem('fmc_notation_font') || 'JetBrains Mono';
+    applyNotationFont(savedFont);
+  } catch (e) {
+    applyNotationFont('JetBrains Mono');
+  }
 
   // --- Parse URL Parameters on Load ---
   function loadFromURL() {

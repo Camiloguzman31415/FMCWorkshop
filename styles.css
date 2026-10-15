@@ -1,5 +1,5 @@
 /* styles.css - FMCWorkshop Styling */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Roboto+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700&family=Fira+Code:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Inconsolata:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Roboto+Mono:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:ital,wght@0,400;0,700&family=Ubuntu+Mono:ital,wght@0,400;0,700&display=swap');
 
 :root {
   --bg-main: #1e1e20;
@@ -21,6 +21,7 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
+  --font-notation: 'JetBrains Mono', 'Roboto Mono', monospace;
 }
 
 * {
@@ -502,15 +503,19 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Title Input */
+/* Title Input & Toolbar */
 .title-container {
+  position: relative;
   display: flex;
+  align-items: center;
   justify-content: center;
   width: 100%;
+  min-height: 38px;
 }
 
 .title-input {
   width: 100%;
+  max-width: 380px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -538,12 +543,93 @@ html, body {
   font-weight: 500;
 }
 
+/* Font Selector */
+.font-selector-box {
+  position: absolute;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.font-selector-box:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.font-selector-box .font-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.font-selector-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.font-select {
+  background: transparent;
+  color: #f1f5f9;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.font-select:focus {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.font-select option,
+#modal-font-select option {
+  background-color: #1a1a24;
+  color: #ffffff;
+  padding: 6px 10px;
+}
+
+/* Individual preview styling for font options */
+option[value="JetBrains Mono"] { font-family: 'JetBrains Mono', monospace; }
+option[value="Fira Code"] { font-family: 'Fira Code', monospace; }
+option[value="IBM Plex Mono"] { font-family: 'IBM Plex Mono', monospace; }
+option[value="Roboto Mono"] { font-family: 'Roboto Mono', monospace; }
+option[value="Source Code Pro"] { font-family: 'Source Code Pro', monospace; }
+option[value="Space Mono"] { font-family: 'Space Mono', monospace; }
+option[value="Ubuntu Mono"] { font-family: 'Ubuntu Mono', monospace; }
+option[value="Cascadia Code"] { font-family: 'Cascadia Code', monospace; }
+option[value="Inconsolata"] { font-family: 'Inconsolata', monospace; }
+option[value="Courier Prime"] { font-family: 'Courier Prime', monospace; }
+
+@media (max-width: 768px) {
+  .title-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .font-selector-box {
+    position: static;
+    align-self: flex-end;
+  }
+}
+
 /* Textarea boxes */
 .fmc-textarea {
   width: 100%;
   background-color: #ffffff;
   color: #111111;
-  font-family: 'JetBrains Mono', 'Roboto Mono', 'Cascadia Code', 'Segoe UI Mono', monospace;
+  font-family: var(--font-notation);
   font-size: 14.5px;
   letter-spacing: 0.2px;
   line-height: 1.5;
@@ -615,7 +701,7 @@ html, body {
 }
 
 .banner-metric {
-  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  font-family: var(--font-notation);
   font-size: 13px;
   font-weight: 700;
   color: #ffffff;
@@ -656,7 +742,7 @@ html, body {
 .fmc-content-display {
   background-color: var(--grey-content);
   color: var(--grey-content-text);
-  font-family: 'JetBrains Mono', 'Roboto Mono', 'Cascadia Code', 'Segoe UI Mono', monospace;
+  font-family: var(--font-notation);
   font-size: 14px;
   letter-spacing: 0.2px;
   line-height: 1.5;
