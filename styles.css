@@ -2218,6 +2218,9 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 540px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .optimal-sol-row {
