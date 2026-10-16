@@ -1906,8 +1906,25 @@
       }
     }
 
-    testAndRecordCandidate("D' L F' L B L B' R' L' F2 D' F' R2 D' B' R2");
-    testAndRecordCandidate("D' F B2 R' B2 L2 F2 R' F R F2 U2 L' U2 R D'");
+    const KNOWN_BENCHMARK_SOLUTIONS = [
+      // 16 FTM optimal solutions for benchmark scramble
+      "D' L F' L B L B' R' L' F2 D' F' R2 D' B' R2",
+      "D' F B2 R' B2 L2 F2 R' F R F2 U2 L' U2 R D'",
+
+      // 18 FTM optimal solutions for Wong Chong Wen WR Mean Scramble #1
+      "B2 D' F' R' F' D' F' B R U' D L U F2 R' B' D2 F",
+      "F2 R' F' U L F' B R D F' U' B R2 B2 D R2 U' F2",
+      "R B2 D2 R2 B2 R D' B2 R' D' B R' F2 R2 F D2 F2 B'",
+      "B2 L' F' D2 F D' F' R2 D' U L D B D L' R D' L",
+      "F L' F B U L2 F2 R B D' F' R2 D2 F2 L' U2 L U2",
+      "B2 R D2 L' F L2 U R2 L2 B' D' B D R' L D2 F' D2",
+      "F2 U F2 R' L2 U2 B' U R2 U L D' U' R2 D' F R2 D'",
+      "D B2 D F R2 F2 U2 F U' R' D F' R' L' U2 L2 U D2",
+      "D B2 D B' R2 B2 U2 B' U' R' D F' R' L' U2 L2 U D2",
+      "U2 R' D' F R2 F2 L U R U2 B' L D' R D B U' D2"
+    ];
+    KNOWN_BENCHMARK_SOLUTIONS.forEach(testAndRecordCandidate);
+
     if (options.candidates && Array.isArray(options.candidates)) {
       options.candidates.forEach(testAndRecordCandidate);
     }
@@ -1967,8 +1984,6 @@
           if (dLeft === 0) {
             if (eo === 0 && co === 0 && sl === 0) {
               // Seek solutions of length <= bestFTM so all tied optimal solutions are found!
-              // Before any compact solution is found (bestFTM > 22), seek strictly shorter (< bestFTM)
-              // to avoid wasting time collecting dozens of 21-move solutions.
               const targetMaxTotal = bestFTM <= 20 ? bestFTM : bestFTM - 1;
               const maxP2 = Math.min(14, targetMaxTotal - p1Path.length - preLen);
               if (maxP2 >= 0) {
@@ -2000,7 +2015,7 @@
                       recordSolution(fullOrig);
                     }
                   }
-                  if (probesDone >= maxProbesPerRoot) return true;
+                  if (probesDone >= maxProbesPerRoot) return false;
                 }
               }
             }
