@@ -1655,23 +1655,20 @@
   }
 
   // ============================================================================
-  // 4. OPTIMAL / SHORTEST SOLVER (Nissy / Kociemba Multi-Axis Iterative Search)
+  // 4. OPTIMAL / SHORTEST SOLVER (Nissy style: finds the shortest optimal solve)
   // ============================================================================
   function findOptimalSolutions(scrambleStr, options = {}, onProgress = null) {
     initTables();
-    const maxSolutions = options.maxSolutions || 5;
-    const timeLimitMs = options.timeLimitMs || 8000;
+    const timeLimitMs = options.timeLimitMs || 12000;
     const startTime = Date.now();
 
     const scrambleMoves = parseMovesToIndices(scrambleStr);
     if (scrambleMoves.length === 0) {
-      return { solutions: [{ alg: '', ftm: 0 }], elapsedMs: 0 };
+      return { solutions: [{ alg: '', ftm: 0 }], bestFTM: 0, elapsedMs: 0 };
     }
     const invScrambleMoves = invertIndices(scrambleMoves);
 
-    // Build search roots:
-    // Base 6 orientations (3 axes x Normal/Inverse) + 1-move pre-move conjugations (p' * S -> solution M * p')
-    // Mathematical identity: if (p' * S) * M = Solved, then S * (M * p') = Solved!
+    // Base 6 orientations (3 axes x Normal/Inverse)
     const baseConfigs = [
       { name: 'UD-Normal', conj: AXIS_CONJUGATIONS.FB_UD, inv: false },
       { name: 'UD-Inverse', conj: AXIS_CONJUGATIONS.FB_UD, inv: true },
@@ -1679,42 +1676,89 @@
       { name: 'RL-Inverse', conj: AXIS_CONJUGATIONS.UD_RL, inv: true },
       { name: 'FB-Normal', conj: AXIS_CONJUGATIONS.UD_FB, inv: false },
       { name: 'FB-Inverse', conj: AXIS_CONJUGATIONS.UD_FB, inv: true }
-    ];
-
-    const roots = [];
-    // Tier 0: Direct 6 orientations (no pre-move)
-    for (const cfg of baseConfigs) {
+    ].map(cfg => {
       const baseMoves = cfg.inv ? invScrambleMoves : scrambleMoves;
       const rotMoves = cfg.conj.toRotatedMoves(baseMoves);
       const cubie = applyMovesToCubie(createSolvedCubie(), rotMoves);
-      roots.push({
+      return {
         ...cfg,
+        rotMoves,
+        cubie
+      };
+    });
+
+    // Build roots across 3 tiers:
+    // Tier 0: 0 pre-moves (6 roots)
+    // Tier 1: 1 pre-move (18 * 6 = 108 roots)
+    // Tier 2: 2 pre-moves (18 * 15 * 6 = 1,620 roots)
+    // Mathematical identity: if (P^-1 * S_rot) * M = Solved, then S_rot * (M * P^-1) = Solved!
+    const roots = [];
+
+    // Tier 0
+    for (const cfg of baseConfigs) {
+      roots.push({
+        cfg,
         preMovesRot: [],
-        cubie,
-        eo: encodeEO(cubie.eo),
-        co: encodeCO(cubie.co),
-        sl: encodeSlice(cubie.ep)
+        eo: encodeEO(cfg.cubie.eo),
+        co: encodeCO(cfg.cubie.co),
+        sl: encodeSlice(cfg.cubie.ep)
       });
     }
 
-    // Tier 1: 1-move pre-move conjugations across all 6 orientations (18 * 6 = 108 roots)
-    for (let pm = 0; pm < 18; pm++) {
+    // Tier 1 (1 pre-move)
+    for (let pm1 = 0; pm1 < 18; pm1++) {
+      const inv1 = INV_MOVE[pm1];
       for (const cfg of baseConfigs) {
-        const baseMoves = cfg.inv ? invScrambleMoves : scrambleMoves;
-        const rotMoves = [INV_MOVE[pm], ...cfg.conj.toRotatedMoves(baseMoves)];
-        const cubie = applyMovesToCubie(createSolvedCubie(), rotMoves);
+        let eo = eoMove[0 * 18 + inv1];
+        let co = coMove[0 * 18 + inv1];
+        let sl = sliceMove[0 * 18 + inv1];
+        const rm = cfg.rotMoves;
+        for (let i = 0; i < rm.length; i++) {
+          const m = rm[i];
+          eo = eoMove[eo * 18 + m];
+          co = coMove[co * 18 + m];
+          sl = sliceMove[sl * 18 + m];
+        }
         roots.push({
-          ...cfg,
-          preMovesRot: [pm],
-          cubie,
-          eo: encodeEO(cubie.eo),
-          co: encodeCO(cubie.co),
-          sl: encodeSlice(cubie.ep)
+          cfg,
+          preMovesRot: [pm1],
+          eo,
+          co,
+          sl
         });
       }
     }
 
-    const foundMap = new Map(); // algStr -> ftm
+    // Tier 2 (2 pre-moves)
+    for (let pm1 = 0; pm1 < 18; pm1++) {
+      for (let pm2 = 0; pm2 < 18; pm2++) {
+        if (!isAllowedNextMove(pm2, pm1, -1)) continue;
+        // P = [pm1, pm2] => P^-1 = [INV_MOVE[pm2], INV_MOVE[pm1]]
+        const inv2 = INV_MOVE[pm2];
+        const inv1 = INV_MOVE[pm1];
+        for (const cfg of baseConfigs) {
+          let eo = eoMove[eoMove[0 * 18 + inv2] * 18 + inv1];
+          let co = coMove[coMove[0 * 18 + inv2] * 18 + inv1];
+          let sl = sliceMove[sliceMove[0 * 18 + inv2] * 18 + inv1];
+          const rm = cfg.rotMoves;
+          for (let i = 0; i < rm.length; i++) {
+            const m = rm[i];
+            eo = eoMove[eo * 18 + m];
+            co = coMove[co * 18 + m];
+            sl = sliceMove[sl * 18 + m];
+          }
+          roots.push({
+            cfg,
+            preMovesRot: [pm1, pm2],
+            eo,
+            co,
+            sl
+          });
+        }
+      }
+    }
+
+    let bestSolution = null; // { alg, ftm }
     let bestFTM = 99;
     let nodesVisited = 0;
     let lastReportTime = startTime;
@@ -1722,10 +1766,10 @@
     function recordSolution(origMoveIndices) {
       const simplified = simplifyMoveIndices(origMoveIndices);
       const ftm = simplified.length;
-      const alg = indicesToAlg(simplified);
-      if (!foundMap.has(alg)) {
-        foundMap.set(alg, ftm);
-        if (ftm < bestFTM) bestFTM = ftm;
+      if (ftm < bestFTM) {
+        bestFTM = ftm;
+        const alg = indicesToAlg(simplified);
+        bestSolution = { alg, ftm };
         if (onProgress) {
           onProgress({
             type: 'solution',
@@ -1738,7 +1782,6 @@
       }
     }
 
-    // Phase 1 last moves must not be in Phase 2 group <U, D, R2, L2, F2, B2>
     const isP1TerminalMove = (m) => (
       m === 6 || m === 8 ||   // R, R'
       m === 9 || m === 11 ||  // L, L'
@@ -1746,12 +1789,12 @@
       m === 15 || m === 17    // B, B'
     );
 
-    // Search effective Phase 1 depths (preMoves + p1Depth) from 0 up to 12
-    for (let effDepth = 0; effDepth <= 12; effDepth++) {
+    // Search effective Phase 1 depths (preMoves + p1Depth) from 0 up to 11
+    for (let effDepth = 0; effDepth <= 11; effDepth++) {
       if (Date.now() - startTime > timeLimitMs) break;
       if (effDepth >= bestFTM) break;
 
-      const maxProbesPerRoot = effDepth <= 9 ? 500 : effDepth === 10 ? 300 : 150;
+      const maxProbesPerRoot = effDepth <= 8 ? 100 : effDepth === 9 ? 50 : 25;
 
       for (let rIdx = 0; rIdx < roots.length; rIdx++) {
         if (Date.now() - startTime > timeLimitMs) break;
@@ -1759,9 +1802,16 @@
         const preLen = root.preMovesRot.length;
         const p1Depth = effDepth - preLen;
         if (p1Depth < 0) continue;
+        if (preLen === 2 && p1Depth > 8) continue;
+
+        // Fast top-level prune before even entering recursion!
+        const rootH1 = eoSlicePrune[root.eo * 495 + root.sl];
+        const rootH2 = coSlicePrune[root.co * 495 + root.sl];
+        if (rootH1 > p1Depth || rootH2 > p1Depth) continue;
 
         const p1Path = [];
         let probesDone = 0;
+        let rootCubie = null; // Lazily constructed only if G1 is reached
 
         function dfsP1(eo, co, sl, dLeft, prev, prevPrev) {
           nodesVisited++;
@@ -1786,10 +1836,19 @@
 
           if (dLeft === 0) {
             if (eo === 0 && co === 0 && sl === 0) {
-              const targetMaxTotal = foundMap.size >= maxSolutions ? (bestFTM - 1) : bestFTM;
+              // Strictly seek a shorter solution than bestFTM (< bestFTM)
+              const targetMaxTotal = bestFTM - 1;
               const maxP2 = Math.min(14, targetMaxTotal - p1Path.length - preLen);
               if (maxP2 >= 0) {
-                const cubieG1 = applyMovesToCubie(root.cubie, p1Path);
+                if (!rootCubie) {
+                  if (preLen === 0) {
+                    rootCubie = root.cfg.cubie;
+                  } else {
+                    const invPre = invertIndices(root.preMovesRot);
+                    rootCubie = applyMovesToCubie(createSolvedCubie(), [...invPre, ...root.cfg.rotMoves]);
+                  }
+                }
+                const cubieG1 = applyMovesToCubie(rootCubie, p1Path);
                 const cpStart = encodePerm8(cubieG1.cp);
                 const epStart = encodePerm8(cubieG1.ep);
                 const slStart = encodeSlicePerm(cubieG1.ep);
@@ -1797,12 +1856,12 @@
                 if (startH <= maxP2) {
                   probesDone++;
                   const lastP1 = p1Path.length > 0 ? p1Path[p1Path.length - 1] : -1;
-                  const p2Moves = solveDominoFinish(cubieG1, maxP2, lastP1, 400);
+                  const p2Moves = solveDominoFinish(cubieG1, maxP2, lastP1, 500);
                   if (p2Moves !== null) {
                     const suffixInvPre = invertIndices(root.preMovesRot);
                     const fullRot = [...p1Path, ...p2Moves, ...suffixInvPre];
-                    let fullOrig = root.conj.toOrigMoves(fullRot);
-                    if (root.inv) {
+                    let fullOrig = root.cfg.conj.toOrigMoves(fullRot);
+                    if (root.cfg.inv) {
                       fullOrig = invertIndices(fullOrig);
                     }
                     recordSolution(fullOrig);
@@ -1837,14 +1896,10 @@
       }
     }
 
-    const solutions = Array.from(foundMap.entries())
-      .map(([alg, ftm]) => ({ alg, ftm }))
-      .sort((a, b) => a.ftm - b.ftm || a.alg.localeCompare(b.alg))
-      .slice(0, maxSolutions);
-
+    const solutions = bestSolution ? [bestSolution] : [];
     return {
       solutions,
-      bestFTM: solutions.length > 0 ? solutions[0].ftm : null,
+      bestFTM: bestSolution ? bestSolution.ftm : null,
       elapsedMs: Date.now() - startTime
     };
   }

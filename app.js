@@ -1841,7 +1841,6 @@ B2 L2 D2 F2//M slice (4/20)
   const mallardStatusBar = document.getElementById('mallard-status-bar');
   const mallardResultsGrid = document.getElementById('mallard-results-grid');
 
-  const optimalTimeSelect = document.getElementById('optimal-time-select');
   const btnCalcOptimal = document.getElementById('btn-calc-optimal');
   const btnStopOptimal = document.getElementById('btn-stop-optimal');
   const optimalStatusBar = document.getElementById('optimal-status-bar');
@@ -2437,7 +2436,7 @@ B2 L2 D2 F2//M slice (4/20)
   if (mallardFilterAxis) mallardFilterAxis.addEventListener('change', renderMallardResults);
   if (mallardFilterDir) mallardFilterDir.addEventListener('change', renderMallardResults);
 
-  // --- 3. Optimal Solver (Nissy style on-demand button with Stop & Live Timer) ---
+  // --- 3. Optimal Solver (Nissy style `solve optimal`: finds the single shortest solution) ---
   let isOptimalRunning = false;
   let optimalTimerInterval = null;
   let optimalStartTime = 0;
@@ -2447,12 +2446,12 @@ B2 L2 D2 F2//M slice (4/20)
     if (!optimalResultsList) return;
     optimalResultsList.innerHTML = '';
 
-    solutions.forEach((sol, idx) => {
+    solutions.forEach((sol) => {
       const row = document.createElement('div');
       row.className = 'optimal-sol-row';
       row.innerHTML = `
         <div class="optimal-sol-left">
-          <span class="optimal-ftm-badge">#${idx + 1} &bull; ${sol.ftm} FTM</span>
+          <span class="optimal-ftm-badge">Óptimo &bull; ${sol.ftm} FTM</span>
           <span class="optimal-sol-alg">${escapeHtml(sol.alg)}</span>
         </div>
         <div class="optimal-sol-actions">
@@ -2478,7 +2477,7 @@ B2 L2 D2 F2//M slice (4/20)
           updateSolution();
           setStep(parsedSolution.finalMoves.length);
           window.scrollTo({ top: 0, behavior: 'smooth' });
-          showToast(`Solución de ${sol.ftm} FTM cargada en el editor`);
+          showToast(`Solución óptima de ${sol.ftm} FTM cargada en el editor`);
         });
       }
 
@@ -2505,7 +2504,7 @@ B2 L2 D2 F2//M slice (4/20)
       }
       const elapsedSec = ((performance.now() - optimalStartTime) / 1000).toFixed(1);
       if (optimalStatusBar) {
-        optimalStatusBar.innerHTML = `Búsqueda detenida a los ${elapsedSec}s. ${streamedOptimalSolutions.length > 0 ? `Mejor solución encontrada: <b>${streamedOptimalSolutions[0].ftm} FTM</b>.` : ''}`;
+        optimalStatusBar.innerHTML = `Búsqueda detenida a los ${elapsedSec}s. ${streamedOptimalSolutions.length > 0 ? `Solución más corta encontrada: <b>${streamedOptimalSolutions[0].ftm} FTM</b>.` : ''}`;
       }
     }
   }
@@ -2519,7 +2518,7 @@ B2 L2 D2 F2//M slice (4/20)
         return;
       }
 
-      const timeLimitMs = parseInt(optimalTimeSelect ? optimalTimeSelect.value : '8000', 10) || 8000;
+      const timeLimitMs = 15000;
       isOptimalRunning = true;
       streamedOptimalSolutions = [];
       optimalStartTime = performance.now();
@@ -2535,7 +2534,7 @@ B2 L2 D2 F2//M slice (4/20)
           ? ` &bull; Mejor actual: <b>${streamedOptimalSolutions[0].ftm} FTM</b>`
           : '';
         if (optimalStatusBar) {
-          optimalStatusBar.innerHTML = `Calculando solución óptima en segundo plano... <b>${sec}s</b>${currentDepthInfo}${bestTxt}`;
+          optimalStatusBar.innerHTML = `Buscando la solución más óptima (<code>solve optimal</code>)... <b>${sec}s</b>${currentDepthInfo}${bestTxt}`;
         }
       }, 100);
 
@@ -2544,16 +2543,15 @@ B2 L2 D2 F2//M slice (4/20)
           'findOptimal',
           {
             scramble: scrambleStr,
-            options: { timeLimitMs, maxSolutions: 6 }
+            options: { timeLimitMs }
           },
           (prog) => {
             if (!isOptimalRunning) return;
             if (prog.type === 'progress' && prog.depth !== undefined) {
               currentDepthInfo = ` (Fase 1 prof. ${prog.depth})`;
             } else if (prog.type === 'solution') {
-              streamedOptimalSolutions.push({ alg: prog.alg, ftm: prog.ftm });
-              streamedOptimalSolutions.sort((a, b) => a.ftm - b.ftm);
-              streamedOptimalSolutions = streamedOptimalSolutions.slice(0, 6);
+              // Keep only the single shortest solution found so far
+              streamedOptimalSolutions = [{ alg: prog.alg, ftm: prog.ftm }];
               renderOptimalSolutions(streamedOptimalSolutions);
             }
           }
@@ -2564,14 +2562,14 @@ B2 L2 D2 F2//M slice (4/20)
 
         const totalSec = (res.elapsedMs / 1000).toFixed(2);
         if (res.solutions && res.solutions.length > 0) {
-          streamedOptimalSolutions = res.solutions;
-          renderOptimalSolutions(res.solutions);
+          streamedOptimalSolutions = [res.solutions[0]];
+          renderOptimalSolutions(streamedOptimalSolutions);
           if (optimalStatusBar) {
-            optimalStatusBar.innerHTML = `Búsqueda completada en <b>${totalSec}s</b> &bull; Mejor solución encontrada: <b>${res.bestFTM} FTM</b> (${res.solutions.length} soluciones mostradas).`;
+            optimalStatusBar.innerHTML = `Solución óptima encontrada en <b>${totalSec}s</b> &bull; <b>${res.bestFTM} movimientos (FTM)</b>.`;
           }
         } else {
           if (optimalStatusBar) {
-            optimalStatusBar.textContent = 'No se encontraron soluciones dentro del tiempo límite.';
+            optimalStatusBar.textContent = 'No se encontró solución.';
           }
         }
       } catch (err) {
