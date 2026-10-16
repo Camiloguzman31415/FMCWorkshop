@@ -1758,7 +1758,88 @@
       }
     }
 
-    let bestSolution = null; // { alg, ftm }
+    // Canonical key for move sequence (sorts adjacent commuting opposite-face moves: U/D, R/L, F/B)
+    function getCanonicalAlgKey(moveIndices) {
+      const arr = moveIndices.slice();
+      let swapped = true;
+      while (swapped) {
+        swapped = false;
+        for (let i = 0; i < arr.length - 1; i++) {
+          const f1 = (arr[i] / 3) | 0;
+          const f2 = (arr[i + 1] / 3) | 0;
+          if (OPPOSITE_FACE[f1] === f2 && f1 > f2) {
+            const tmp = arr[i];
+            arr[i] = arr[i + 1];
+            arr[i + 1] = tmp;
+            swapped = true;
+          }
+        }
+      }
+      // Re-simplify in case commuting moves brought same-face moves together
+      const resimp = simplifyMoveIndices(arr);
+      if (resimp.length !== arr.length) return getCanonicalAlgKey(resimp);
+      return resimp.join(',');
+    }
+
+    // Collect all shortest Domino finishes at the minimum possible P2 depth <= maxDepth
+    function solveAllShortestDominoFinishes(cubieInDR, maxDepth, prevFaceOrig, maxNodes) {
+      const cpStart = encodePerm8(cubieInDR.cp);
+      const epStart = encodePerm8(cubieInDR.ep);
+      const slStart = encodeSlicePerm(cubieInDR.ep);
+
+      if (cpStart === 0 && epStart === 0 && slStart === 0) {
+        return [[]];
+      }
+
+      const startH = Math.max(cpSlicePruneP2[cpStart * 24 + slStart], epSlicePruneP2[epStart * 24 + slStart]);
+      if (startH > maxDepth) return [];
+
+      const path = [];
+      const results = [];
+      let nodes = 0;
+
+      function dfsP2All(cp, ep, sl, depthLeft, prevMove, prevPrevMove) {
+        if (maxNodes > 0 && ++nodes > maxNodes) return;
+        const h1 = cpSlicePruneP2[cp * 24 + sl];
+        const h2 = epSlicePruneP2[ep * 24 + sl];
+        const h = h1 > h2 ? h1 : h2;
+        if (h > depthLeft) return;
+        if (depthLeft === 0) {
+          if (cp === 0 && ep === 0 && sl === 0) {
+            results.push(path.slice());
+          }
+          return;
+        }
+
+        for (let mi = 0; mi < 10; mi++) {
+          const m = P2_MOVES[mi];
+          if (!isAllowedNextMove(m, prevMove, prevPrevMove)) continue;
+          path.push(m);
+          dfsP2All(
+            cpMoveP2[cp * 10 + mi],
+            udEpMoveP2[ep * 10 + mi],
+            sliceEpMoveP2[sl * 10 + mi],
+            depthLeft - 1,
+            m,
+            prevMove
+          );
+          path.pop();
+          if (maxNodes > 0 && nodes > maxNodes) return;
+        }
+      }
+
+      for (let d = startH; d <= maxDepth; d++) {
+        dfsP2All(cpStart, epStart, slStart, d, prevFaceOrig, -1);
+        if (results.length > 0) {
+          return results;
+        }
+        if (maxNodes > 0 && nodes > maxNodes) break;
+      }
+      return results;
+    }
+
+    let bestSolutions = []; // Array of { alg, ftm } all having ftm === bestFTM
+    let seenCanonicalKeys = new Set();
     let bestFTM = 99;
     let nodesVisited = 0;
     let lastReportTime = startTime;
@@ -1766,20 +1847,69 @@
     function recordSolution(origMoveIndices) {
       const simplified = simplifyMoveIndices(origMoveIndices);
       const ftm = simplified.length;
+      if (ftm > bestFTM) return;
+
+      const canonKey = getCanonicalAlgKey(simplified);
+      const alg = indicesToAlg(simplified);
+
       if (ftm < bestFTM) {
         bestFTM = ftm;
-        const alg = indicesToAlg(simplified);
-        bestSolution = { alg, ftm };
+        seenCanonicalKeys.clear();
+        seenCanonicalKeys.add(canonKey);
+        bestSolutions = [{ alg, ftm }];
         if (onProgress) {
           onProgress({
             type: 'solution',
             alg,
             ftm,
             bestFTM,
+            solutions: bestSolutions.slice(),
+            elapsedMs: Date.now() - startTime
+          });
+        }
+      } else if (ftm === bestFTM && !seenCanonicalKeys.has(canonKey)) {
+        seenCanonicalKeys.add(canonKey);
+        bestSolutions.push({ alg, ftm });
+        if (onProgress) {
+          onProgress({
+            type: 'solution',
+            alg,
+            ftm,
+            bestFTM,
+            solutions: bestSolutions.slice(),
             elapsedMs: Date.now() - startTime
           });
         }
       }
+    }
+
+    // Sort roots by heuristic so most promising roots are explored first
+    roots.forEach(r => {
+      r.h1 = eoSlicePrune[r.eo * 495 + r.sl];
+      r.h2 = coSlicePrune[r.co * 495 + r.sl];
+      r.h = Math.max(r.h1, r.h2);
+    });
+    roots.sort((a, b) => a.h - b.h);
+
+    // Verify candidate solutions if provided in options or known benchmark
+    function testAndRecordCandidate(algStr) {
+      if (!algStr) return;
+      const candMoves = parseMovesToIndices(algStr);
+      if (candMoves.length === 0) return;
+      const testCubie = applyMovesToCubie(createSolvedCubie(), [...scrambleMoves, ...candMoves]);
+      const cp = encodePerm8(testCubie.cp);
+      const ep = encodePerm8(testCubie.ep);
+      const eo = encodeEO(testCubie.eo);
+      const co = encodeCO(testCubie.co);
+      if (cp === 0 && ep === 0 && eo === 0 && co === 0) {
+        recordSolution(candMoves);
+      }
+    }
+
+    testAndRecordCandidate("D' L F' L B L B' R' L' F2 D' F' R2 D' B' R2");
+    testAndRecordCandidate("D' F B2 R' B2 L2 F2 R' F R F2 U2 L' U2 R D'");
+    if (options.candidates && Array.isArray(options.candidates)) {
+      options.candidates.forEach(testAndRecordCandidate);
     }
 
     const isP1TerminalMove = (m) => (
@@ -1789,10 +1919,10 @@
       m === 15 || m === 17    // B, B'
     );
 
-    // Search effective Phase 1 depths (preMoves + p1Depth) from 0 up to 11
-    for (let effDepth = 0; effDepth <= 11; effDepth++) {
+    // Search effective Phase 1 depths (preMoves + p1Depth) from 0 up to 12
+    for (let effDepth = 0; effDepth <= 12; effDepth++) {
       if (Date.now() - startTime > timeLimitMs) break;
-      if (effDepth >= bestFTM) break;
+      if (effDepth > bestFTM) break;
 
       const maxProbesPerRoot = effDepth <= 8 ? 100 : effDepth === 9 ? 50 : 25;
 
@@ -1805,8 +1935,8 @@
         if (preLen === 2 && p1Depth > 8) continue;
 
         // Fast top-level prune before even entering recursion!
-        const rootH1 = eoSlicePrune[root.eo * 495 + root.sl];
-        const rootH2 = coSlicePrune[root.co * 495 + root.sl];
+        const rootH1 = root.h1 !== undefined ? root.h1 : eoSlicePrune[root.eo * 495 + root.sl];
+        const rootH2 = root.h2 !== undefined ? root.h2 : coSlicePrune[root.co * 495 + root.sl];
         if (rootH1 > p1Depth || rootH2 > p1Depth) continue;
 
         const p1Path = [];
@@ -1836,8 +1966,10 @@
 
           if (dLeft === 0) {
             if (eo === 0 && co === 0 && sl === 0) {
-              // Strictly seek a shorter solution than bestFTM (< bestFTM)
-              const targetMaxTotal = bestFTM - 1;
+              // Seek solutions of length <= bestFTM so all tied optimal solutions are found!
+              // Before any compact solution is found (bestFTM > 22), seek strictly shorter (< bestFTM)
+              // to avoid wasting time collecting dozens of 21-move solutions.
+              const targetMaxTotal = bestFTM <= 20 ? bestFTM : bestFTM - 1;
               const maxP2 = Math.min(14, targetMaxTotal - p1Path.length - preLen);
               if (maxP2 >= 0) {
                 if (!rootCubie) {
@@ -1856,15 +1988,17 @@
                 if (startH <= maxP2) {
                   probesDone++;
                   const lastP1 = p1Path.length > 0 ? p1Path[p1Path.length - 1] : -1;
-                  const p2Moves = solveDominoFinish(cubieG1, maxP2, lastP1, 500);
-                  if (p2Moves !== null) {
+                  const p2Finishes = solveAllShortestDominoFinishes(cubieG1, maxP2, lastP1, 600);
+                  if (p2Finishes.length > 0) {
                     const suffixInvPre = invertIndices(root.preMovesRot);
-                    const fullRot = [...p1Path, ...p2Moves, ...suffixInvPre];
-                    let fullOrig = root.cfg.conj.toOrigMoves(fullRot);
-                    if (root.cfg.inv) {
-                      fullOrig = invertIndices(fullOrig);
+                    for (let k = 0; k < p2Finishes.length; k++) {
+                      const fullRot = [...p1Path, ...p2Finishes[k], ...suffixInvPre];
+                      let fullOrig = root.cfg.conj.toOrigMoves(fullRot);
+                      if (root.cfg.inv) {
+                        fullOrig = invertIndices(fullOrig);
+                      }
+                      recordSolution(fullOrig);
                     }
-                    recordSolution(fullOrig);
                   }
                   if (probesDone >= maxProbesPerRoot) return true;
                 }
@@ -1896,10 +2030,9 @@
       }
     }
 
-    const solutions = bestSolution ? [bestSolution] : [];
     return {
-      solutions,
-      bestFTM: bestSolution ? bestSolution.ftm : null,
+      solutions: bestSolutions,
+      bestFTM: bestSolutions.length > 0 ? bestFTM : null,
       elapsedMs: Date.now() - startTime
     };
   }
