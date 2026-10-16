@@ -764,8 +764,28 @@
       depth++;
     }
 
+    // 10. Precompute bad corner count (2187) and bad slice edge count (495) for instant post-EO stats
+    coBadCount = new Uint8Array(2187);
+    for (let c = 0; c < 2187; c++) {
+      decodeCO(c, tmpA.co);
+      let bc = 0;
+      for (let i = 0; i < 8; i++) if (tmpA.co[i] !== 0) bc++;
+      coBadCount[c] = bc;
+    }
+
+    sliceBadCount = new Uint8Array(495);
+    for (let s = 0; s < 495; s++) {
+      decodeSlice(s, tmpA.ep);
+      let sOut = 0;
+      for (let i = 8; i < 12; i++) if (tmpA.ep[i] < 8) sOut++;
+      sliceBadCount[s] = sOut * 2;
+    }
+
     tablesReady = true;
   }
+
+  let coBadCount = null;
+  let sliceBadCount = null;
 
   // Helper: check if move index `m` is allowed after `prevMove` and `prevPrevMove`
   function isAllowedNextMove(m, prevMove, prevPrevMove) {
@@ -815,48 +835,32 @@
     };
   }
 
-  // Compute post-EO DR stats on a specific (eoAxis, drAxis) conjugation
-  // Returns { c, e, armC, armE, isRzp, isArm, pairs, drDist }
-  function computePostEOStats(origMovesAfterScramble, conj) {
-    const rotMoves = conj.toRotatedMoves(origMovesAfterScramble);
-    const cubie = applyMovesToCubie(createSolvedCubie(), rotMoves);
-
-    // 1. Bad corners (co[i] !== 0)
-    let badC = 0;
-    for (let i = 0; i < 8; i++) {
-      if (cubie.co[i] !== 0) badC++;
+  // Compute post-EO DR stats on a specific (eoAxis, drAxis) conjugation using O(1) table lookups
+  function computePostEOStats(origMovesAfterScramble, conj, precomputedPairs) {
+    let coCoord = 0;
+    let slCoord = 0;
+    const map = conj.origMoveToRotMove;
+    for (let i = 0; i < origMovesAfterScramble.length; i++) {
+      const rm = map[origMovesAfterScramble[i]];
+      coCoord = coMove[coCoord * 18 + rm];
+      slCoord = sliceMove[slCoord * 18 + rm];
     }
 
-    // 2. Bad edges wrt E-slice: each E-slice piece (8..11) not in 8..11 plus each U/D piece in 8..11
-    let sliceOut = 0;
-    for (let i = 8; i < 12; i++) {
-      if (cubie.ep[i] < 8) sliceOut++;
-    }
-    const badE = sliceOut * 2;
-
-    const coCoord = encodeCO(cubie.co);
-    const slCoord = encodeSlice(cubie.ep);
+    const badC = coBadCount[coCoord];
+    const badE = sliceBadCount[slCoord];
     const drDist = drPrune[coCoord * 495 + slCoord];
 
-    // 3. Best 1-move RZP/ARM setup on the R/L faces (moves 6, 8, 9, 11 in rotated space = R, R', L, L')
-    // or after U/D/F2/B2 + R/L quarter turn
     let bestArmC = badC;
     let bestArmE = badE;
     let bestArmScore = 999;
     const rzpMoves = [6, 8, 9, 11]; // R, R', L, L'
-    for (const rm of rzpMoves) {
+    for (let k = 0; k < 4; k++) {
+      const rm = rzpMoves[k];
       const nco = coMove[coCoord * 18 + rm];
       const nsl = sliceMove[slCoord * 18 + rm];
       const ndist = drPrune[nco * 495 + nsl];
-      const tmpCo = new Uint8Array(8);
-      const tmpEp = new Uint8Array(12);
-      decodeCO(nco, tmpCo);
-      decodeSlice(nsl, tmpEp);
-      let c = 0;
-      for (let i = 0; i < 8; i++) if (tmpCo[i] !== 0) c++;
-      let sOut = 0;
-      for (let i = 8; i < 12; i++) if (tmpEp[i] < 8) sOut++;
-      const e = sOut * 2;
+      const c = coBadCount[nco];
+      const e = sliceBadCount[nsl];
       const isTriggerReady = (c === 4 && e === 2) || (c === 3 && e === 2) || (c === 4 && e === 4);
       const score = (isTriggerReady ? 0 : 10) + ndist;
       if (score < bestArmScore) {
@@ -866,7 +870,6 @@
       }
     }
 
-    // Check if current state is already a classic RZP (e.g. 4c4e, 4c2e, 3c2e, 2c2e, 0c0e)
     const isRzp = (
       (badC === 4 && badE === 4) ||
       (badC === 4 && badE === 2) ||
@@ -876,11 +879,6 @@
     );
     const isArm = isRzp || drDist <= 4;
 
-    // 4. Count adjacent corner-edge pairs on the 54-sticker cube
-    const s54 = createSolved54();
-    for (const m of origMovesAfterScramble) applyMove54(s54, m);
-    const pairs = countCornerEdgePairs(s54);
-
     return {
       c: badC,
       e: badE,
@@ -888,7 +886,7 @@
       armE: bestArmE,
       isRzp,
       isArm,
-      pairs,
+      pairs: precomputedPairs,
       drDist
     };
   }
@@ -1120,6 +1118,13 @@
         }
       }
 
+      // Precompute 54-sticker scramble and inverse scramble states for fast pair counting
+      const scramble54 = createSolved54();
+      for (let i = 0; i < scrambleMoves.length; i++) applyMove54(scramble54, scrambleMoves[i]);
+      const invScramble54 = createSolved54();
+      for (let i = 0; i < invScrambleMoves.length; i++) applyMove54(invScramble54, invScrambleMoves[i]);
+      const s54Buf = new Uint8Array(54);
+
       // Compute post-EO DR stats & format display string for each solution
       const byType = { Normal: 0, Inverse: 0, NISS: 0 };
       const byMove = {};
@@ -1149,8 +1154,21 @@
           ...sol.normalMoves
         ];
 
+        // Fast 54-sticker state for pair counting (pairs are identical on X and X^-1)
+        if (sol.inverseMoves.length === 0) {
+          s54Buf.set(scramble54);
+          for (let i = 0; i < sol.normalMoves.length; i++) applyMove54(s54Buf, sol.normalMoves[i]);
+        } else if (sol.normalMoves.length === 0) {
+          s54Buf.set(invScramble54);
+          for (let i = 0; i < sol.inverseMoves.length; i++) applyMove54(s54Buf, sol.inverseMoves[i]);
+        } else {
+          s54Buf.set(SOLVED_54);
+          for (let i = 0; i < fullStateMoves.length; i++) applyMove54(s54Buf, fullStateMoves[i]);
+        }
+        const pairs = countCornerEdgePairs(s54Buf);
+
         sol.drStats = drAxes.map(da => {
-          const st = computePostEOStats(fullStateMoves, da.conj);
+          const st = computePostEOStats(fullStateMoves, da.conj, pairs);
           return {
             axis: da.name,
             ...st

@@ -2199,6 +2199,13 @@ B2 L2 D2 F2//M slice (4/20)
       const drBtn = row.querySelector('.eo-dr-btn');
       if (drBtn) {
         drBtn.addEventListener('click', () => {
+          // Ensure Mallard section body is expanded if it was collapsed
+          const mallardBody = document.getElementById('mallard-analyzer-body');
+          if (mallardBody && mallardBody.style.display === 'none') {
+            mallardBody.style.display = '';
+            const collapseBtn = document.querySelector('.block-collapse-btn[data-target="mallard-analyzer-body"] span');
+            if (collapseBtn) collapseBtn.textContent = 'Ocultar';
+          }
           if (mallardEoInput) {
             mallardEoInput.value = sol.notation;
           }
@@ -2213,9 +2220,75 @@ B2 L2 D2 F2//M slice (4/20)
     });
   }
 
+  // Collapsible Master Analysis Suite & Individual Section Toggles
+  const btnToggleAnalysisSuite = document.getElementById('btn-toggle-analysis-suite');
+  const analysisSuiteBody = document.getElementById('analysis-suite-body');
+  const suiteChevronIcon = document.getElementById('suite-chevron-icon');
+  const analysisSuiteToggleLabel = document.getElementById('analysis-suite-toggle-label');
+
+  function setAnalysisSuiteCollapsed(collapsed) {
+    if (!analysisSuiteBody) return;
+    analysisSuiteBody.style.display = collapsed ? 'none' : '';
+    if (suiteChevronIcon) {
+      suiteChevronIcon.classList.toggle('collapsed', collapsed);
+    }
+    if (analysisSuiteToggleLabel) {
+      analysisSuiteToggleLabel.textContent = collapsed ? 'Mostrar Análisis' : 'Ocultar Análisis';
+    }
+    try {
+      localStorage.setItem('fmc_hide_analysis_suite', collapsed ? 'true' : 'false');
+    } catch (e) {}
+  }
+
+  if (btnToggleAnalysisSuite) {
+    btnToggleAnalysisSuite.addEventListener('click', () => {
+      const isCurrentlyCollapsed = analysisSuiteBody && analysisSuiteBody.style.display === 'none';
+      setAnalysisSuiteCollapsed(!isCurrentlyCollapsed);
+    });
+  }
+
+  try {
+    if (localStorage.getItem('fmc_hide_analysis_suite') === 'true') {
+      setAnalysisSuiteCollapsed(true);
+    }
+  } catch (e) {}
+
+  document.querySelectorAll('.block-collapse-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = btn.getAttribute('data-target');
+      const targetEl = targetId ? document.getElementById(targetId) : null;
+      if (!targetEl) return;
+      const isHidden = targetEl.style.display === 'none';
+      targetEl.style.display = isHidden ? '' : 'none';
+      const span = btn.querySelector('span');
+      if (span) span.textContent = isHidden ? 'Ocultar' : 'Mostrar';
+    });
+  });
+
+  function syncMovePillsVisibility() {
+    if (!eoMoveFilterPills || !eoMaxMovesSelect) return;
+    const maxM = parseInt(eoMaxMovesSelect.value, 10) || 5;
+    eoMoveFilterPills.querySelectorAll('.eo-pill-btn').forEach(btn => {
+      const mv = btn.dataset.move;
+      if (mv !== 'all') {
+        const num = parseInt(mv, 10);
+        btn.style.display = num <= maxM ? '' : 'none';
+      }
+    });
+    if (activeMoveFilter !== 'all' && parseInt(activeMoveFilter, 10) > maxM) {
+      activeMoveFilter = 'all';
+      eoMoveFilterPills.querySelectorAll('.eo-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.move === 'all');
+      });
+    }
+  }
+
   // Filter Event Listeners for EO Trainer
   if (eoMaxMovesSelect) {
+    syncMovePillsVisibility();
     eoMaxMovesSelect.addEventListener('change', () => {
+      syncMovePillsVisibility();
       runEOAnalysis(scrambleInput.value.trim());
     });
   }
