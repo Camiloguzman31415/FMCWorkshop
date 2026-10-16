@@ -355,6 +355,212 @@
       </section>
     </main>
 
+    <!-- Bottom FMC Analysis & Solver Suite (EO Finder, Mallard DR Analyzer & Optimal Solver) -->
+    <section class="fmc-analysis-suite" id="fmc-analysis-suite">
+      <!-- 1. EO Finder & Hints Section (eotrainerfmc.com style) -->
+      <div class="analysis-block" id="eo-trainer-section">
+        <div class="analysis-block-header">
+          <div class="analysis-title-group">
+            <h2 class="analysis-block-title">EO Finder &amp; Análisis en los 3 Ejes (FB / RL / UD)</h2>
+            <span class="analysis-subtitle" id="eo-status-subtitle">Calculando EOs de la mezcla actual...</span>
+          </div>
+          <div class="analysis-header-controls">
+            <label for="eo-max-moves-select" class="analysis-ctrl-label">Máx. Movimientos EO:</label>
+            <select id="eo-max-moves-select" class="analysis-select">
+              <option value="4">Hasta 4 movimientos</option>
+              <option value="5" selected>Hasta 5 movimientos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="eo-trainer-grid">
+          <!-- Left Column: Hints (Total, By Move, By Axis with 3D Bad-Edge Mini-Cubes) -->
+          <div class="eo-hints-panel">
+            <div class="eo-panel-header">
+              <span>Resumen / Hints</span>
+            </div>
+
+            <!-- Total Solutions Card -->
+            <div class="eo-hint-group">
+              <div class="eo-hint-group-header">
+                <span class="eo-hint-group-title">Total Soluciones</span>
+              </div>
+              <div class="eo-total-card" id="eo-total-card">
+                <div class="eo-total-main">
+                  <span class="eo-total-number" id="eo-total-count">0</span>
+                  <span class="eo-total-label">Soluciones</span>
+                </div>
+                <div class="eo-type-pills-row">
+                  <div class="eo-type-stat">
+                    <span class="eo-type-val" id="eo-total-normal">0</span>
+                    <span class="eo-type-lbl">NORMAL</span>
+                  </div>
+                  <div class="eo-type-stat">
+                    <span class="eo-type-val" id="eo-total-inverse">0</span>
+                    <span class="eo-type-lbl">INVERSE</span>
+                  </div>
+                  <div class="eo-type-stat">
+                    <span class="eo-type-val" id="eo-total-niss">0</span>
+                    <span class="eo-type-lbl">NISS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- By Move Card -->
+            <div class="eo-hint-group">
+              <div class="eo-hint-group-header">
+                <span class="eo-hint-group-title">Por Longitud</span>
+              </div>
+              <div class="eo-by-move-grid" id="eo-by-move-grid">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- By Axis Cards (FB, RL, UD) -->
+            <div class="eo-hint-group">
+              <div class="eo-hint-group-header">
+                <span class="eo-hint-group-title">Por Eje (Aristas Malas Normal / Inversa)</span>
+              </div>
+              <div class="eo-axes-grid" id="eo-axes-grid">
+                <!-- Populated dynamically with FB, RL, UD cards + isometric bad-edge cubes -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Filterable EO Solutions List -->
+          <div class="eo-solutions-panel">
+            <div class="eo-panel-header">
+              <span id="eo-solutions-list-title">Soluciones EO (0)</span>
+              <span class="eo-panel-hint">Clic en un EO para probarlo en el cubo &bull; Clic en <b>DR</b> para analizar estilo Mallard</span>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="eo-filters-bar">
+              <div class="eo-filter-moves" id="eo-move-filter-pills">
+                <button type="button" class="eo-pill-btn active" data-move="all">Todos</button>
+                <button type="button" class="eo-pill-btn" data-move="1">1</button>
+                <button type="button" class="eo-pill-btn" data-move="2">2</button>
+                <button type="button" class="eo-pill-btn" data-move="3">3</button>
+                <button type="button" class="eo-pill-btn" data-move="4">4</button>
+                <button type="button" class="eo-pill-btn" data-move="5">5</button>
+              </div>
+              <div class="eo-filter-selects">
+                <select id="eo-filter-type" class="analysis-select">
+                  <option value="all">Todos los Tipos</option>
+                  <option value="Normal">Normal</option>
+                  <option value="Inverse">Inverse</option>
+                  <option value="NISS">NISS</option>
+                </select>
+                <select id="eo-filter-axis" class="analysis-select">
+                  <option value="all">Todos los Ejes</option>
+                  <option value="FB">Eje FB</option>
+                  <option value="RL">Eje RL</option>
+                  <option value="UD">Eje UD</option>
+                </select>
+                <select id="eo-filter-rzp" class="analysis-select">
+                  <option value="all">Todas las Soluciones</option>
+                  <option value="rzp">Listo para RZP (4c4e / 4c2e / 3c2e)</option>
+                  <option value="arm">Cerca de DR (ARM ★)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Table Header -->
+            <div class="eo-list-columns-bar">
+              <span>Secuencia EO</span>
+              <span>RZP &nbsp;|&nbsp; ARM &nbsp;|&nbsp; Pares &nbsp;|&nbsp; Analizar</span>
+            </div>
+
+            <!-- Scrollable Solutions List -->
+            <div class="eo-solutions-list" id="eo-solutions-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Mallard-style DR & Finish Analyzer from a Specific EO -->
+      <div class="analysis-block" id="mallard-analyzer-section">
+        <div class="analysis-block-header">
+          <div class="analysis-title-group">
+            <h2 class="analysis-block-title">Analizador DR y Soluciones Estilo Mallard (Desde un EO)</h2>
+            <span class="analysis-subtitle">Selecciona cualquier EO con el botón <b>DR</b> arriba o escribe un EO personalizado para encontrar los mejores DRs y sus finales óptimos.</span>
+          </div>
+        </div>
+
+        <div class="mallard-controls-bar">
+          <div class="mallard-eo-input-wrap">
+            <label for="mallard-eo-input" class="analysis-ctrl-label">EO a analizar:</label>
+            <input type="text" id="mallard-eo-input" class="mallard-eo-input" placeholder="Ej: U L' D2 R o (B' R L' U) o F (U' R' B)" spellcheck="false">
+          </div>
+          <button type="button" class="analysis-primary-btn mallard-btn" id="btn-run-mallard">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <span>Analizar DRs y Solves desde este EO</span>
+          </button>
+          <div class="mallard-filters">
+            <select id="mallard-filter-axis" class="analysis-select">
+              <option value="all">Todos los Ejes DR</option>
+              <option value="UD">DR-UD</option>
+              <option value="RL">DR-RL</option>
+              <option value="FB">DR-FB</option>
+            </select>
+            <select id="mallard-filter-dir" class="analysis-select">
+              <option value="all">Todas las Direcciones</option>
+              <option value="Normal">Continuación Normal</option>
+              <option value="Inverse (NISS)">Cambio NISS (Inversa)</option>
+              <option value="RZP">Con RZP + NISS</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mallard-status-bar" id="mallard-status-bar">
+          Haz clic en el botón amarillo <b>DR</b> de cualquier EO arriba o presiona <b>Analizar DRs y Solves</b>.
+        </div>
+
+        <div class="mallard-results-grid" id="mallard-results-grid">
+          <!-- Populated dynamically with best DRs + Full Domino Finishes -->
+        </div>
+      </div>
+
+      <!-- 3. Optimal Solver Section (Nissy / nissyonline.com style) -->
+      <div class="analysis-block" id="optimal-solver-section">
+        <div class="analysis-block-header">
+          <div class="analysis-title-group">
+            <h2 class="analysis-block-title">Solucionador Óptimo de la Mezcla (Estilo Nissy)</h2>
+            <span class="analysis-subtitle">Busca las soluciones directas más cortas posibles para la mezcla actual en segundo plano (sin congelar la página).</span>
+          </div>
+          <div class="analysis-header-controls">
+            <label for="optimal-time-select" class="analysis-ctrl-label">Nivel de búsqueda:</label>
+            <select id="optimal-time-select" class="analysis-select">
+              <option value="3000">Rápido (3 seg)</option>
+              <option value="8000" selected>Profundo (8 seg)</option>
+              <option value="20000">Exhaustivo (20 seg)</option>
+            </select>
+            <button type="button" class="analysis-primary-btn optimal-btn" id="btn-calc-optimal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/>
+              </svg>
+              <span>Calcular Óptimo</span>
+            </button>
+            <button type="button" class="analysis-stop-btn" id="btn-stop-optimal" style="display: none;">
+              <span>Detener</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="optimal-status-bar" id="optimal-status-bar">
+          Presiona <b>Calcular Óptimo</b> cuando quieras buscar las soluciones más cortas de la mezcla actual.
+        </div>
+
+        <div class="optimal-results-list" id="optimal-results-list">
+          <!-- Populated on demand when user clicks Calcular Óptimo -->
+        </div>
+      </div>
+    </section>
+
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settings-modal">
       <div class="modal-card">
@@ -485,6 +691,7 @@
   <script src="three.min.js"></script>
   <script src="OrbitControls.js"></script>
   <script src="cube.js"></script>
+  <script src="fmc-solver.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

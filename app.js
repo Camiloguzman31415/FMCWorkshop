@@ -938,6 +938,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset or clamp current step
     setStep(currentStep);
+
+    // Trigger EO Finder & Analysis Suite update if scramble changed
+    if (typeof onScrambleChangedForAnalysis === 'function') {
+      onScrambleChangedForAnalysis(rawScramble);
+    }
   }
 
   // --- Update Cube State from Cursor Position in Moves Textarea ---
@@ -1808,6 +1813,708 @@ B2 L2 D2 F2//M slice (4/20)
     applyNotationSize('custom');
     applyNotationBold(true);
     applyCommentColor('#dc2626');
+  }
+
+  // ============================================================================
+  // FMC ANALYSIS & SOLVER SUITE CONTROLLER (EO Finder, Mallard DR & Optimal)
+  // ============================================================================
+  const eoStatusSubtitle = document.getElementById('eo-status-subtitle');
+  const eoMaxMovesSelect = document.getElementById('eo-max-moves-select');
+  const eoTotalCountEl = document.getElementById('eo-total-count');
+  const eoTotalNormalEl = document.getElementById('eo-total-normal');
+  const eoTotalInverseEl = document.getElementById('eo-total-inverse');
+  const eoTotalNissEl = document.getElementById('eo-total-niss');
+  const eoByMoveGrid = document.getElementById('eo-by-move-grid');
+  const eoAxesGrid = document.getElementById('eo-axes-grid');
+  const eoSolutionsListTitle = document.getElementById('eo-solutions-list-title');
+  const eoMoveFilterPills = document.getElementById('eo-move-filter-pills');
+  const eoFilterType = document.getElementById('eo-filter-type');
+  const eoFilterAxis = document.getElementById('eo-filter-axis');
+  const eoFilterRzp = document.getElementById('eo-filter-rzp');
+  const eoSolutionsList = document.getElementById('eo-solutions-list');
+
+  const mallardSection = document.getElementById('mallard-analyzer-section');
+  const mallardEoInput = document.getElementById('mallard-eo-input');
+  const btnRunMallard = document.getElementById('btn-run-mallard');
+  const mallardFilterAxis = document.getElementById('mallard-filter-axis');
+  const mallardFilterDir = document.getElementById('mallard-filter-dir');
+  const mallardStatusBar = document.getElementById('mallard-status-bar');
+  const mallardResultsGrid = document.getElementById('mallard-results-grid');
+
+  const optimalTimeSelect = document.getElementById('optimal-time-select');
+  const btnCalcOptimal = document.getElementById('btn-calc-optimal');
+  const btnStopOptimal = document.getElementById('btn-stop-optimal');
+  const optimalStatusBar = document.getElementById('optimal-status-bar');
+  const optimalResultsList = document.getElementById('optimal-results-list');
+
+  let solverWorker = (typeof FMCSolver !== 'undefined' && FMCSolver.createSolverWorker)
+    ? FMCSolver.createSolverWorker()
+    : null;
+  let workerReqId = 0;
+  const workerCallbacks = new Map();
+
+  function bindWorkerEvents(w) {
+    if (!w) return;
+    w.onmessage = (e) => {
+      const { id, type, result, progress, error } = e.data || {};
+      const cb = workerCallbacks.get(id);
+      if (!cb) return;
+      if (type === 'progress') {
+        if (cb.onProgress) cb.onProgress(progress);
+      } else if (type === 'done') {
+        workerCallbacks.delete(id);
+        cb.resolve(result);
+      } else if (type === 'error') {
+        workerCallbacks.delete(id);
+        cb.reject(new Error(error || 'Solver worker error'));
+      }
+    };
+  }
+  bindWorkerEvents(solverWorker);
+
+  function callSolverAsync(action, payload, onProgress = null) {
+    if (solverWorker) {
+      return new Promise((resolve, reject) => {
+        const id = ++workerReqId;
+        workerCallbacks.set(id, { resolve, reject, onProgress });
+        solverWorker.postMessage({ id, action, payload });
+      });
+    }
+    // Fallback to main thread via setTimeout so UI paints first
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          if (action === 'findEOs') {
+            resolve(FMCSolver.findAllEOs(payload.scramble, payload.maxMoves || 5));
+          } else if (action === 'analyzeMallard') {
+            resolve(FMCSolver.analyzeMallardFromEO(payload.scramble, payload.eo, payload.options || {}));
+          } else if (action === 'findOptimal') {
+            resolve(FMCSolver.findOptimalSolutions(payload.scramble, payload.options || {}, onProgress));
+          }
+        } catch (err) {
+          reject(err);
+        }
+      }, 15);
+    });
+  }
+
+  // Render an isometric 3D mini-cube SVG highlighting bad edges in red
+  function renderBadEdgesMiniCubeSVG(badEdgesList) {
+    const badSet = new Set(badEdgesList || []);
+    const BAD_COLOR = '#f43f5e';
+    const GOOD_TOP = '#262936';
+    const GOOD_LEFT = '#1e202b';
+    const GOOD_RIGHT = '#171922';
+    const STROKE = '#0e0f14';
+
+    const c = (edgeName, defaultFill) => (badSet.has(edgeName) ? BAD_COLOR : defaultFill);
+
+    return `
+      <svg viewBox="0 0 48 48" class="eo-minicube-svg" xmlns="http://www.w3.org/2000/svg">
+        <!-- Base Cube Shell -->
+        <polygon points="24,24 41.32,14 24,4 6.68,14" fill="#12131a" stroke="${STROKE}" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="24,24 6.68,14 6.68,34 24,44" fill="#0e0f15" stroke="${STROKE}" stroke-width="0.9" stroke-linejoin="round"/>
+        <polygon points="24,24 41.32,14 41.32,34 24,44" fill="#0a0b10" stroke="${STROKE}" stroke-width="0.9" stroke-linejoin="round"/>
+
+        <!-- Top Face (U) Stickers -->
+        <polygon points="24.00,23.30 19.44,20.67 24.00,18.03 28.56,20.67" fill="${GOOD_TOP}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="29.77,19.97 25.21,17.33 29.77,14.70 34.33,17.33" fill="${c('UR', GOOD_TOP)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="35.55,16.63 30.99,14.00 35.55,11.37 40.11,14.00" fill="${GOOD_TOP}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="18.23,19.97 13.67,17.33 18.23,14.70 22.79,17.33" fill="${c('UF', GOOD_TOP)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="24.00,16.63 19.44,14.00 24.00,11.37 28.56,14.00" fill="${GOOD_TOP}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="29.77,13.30 25.21,10.67 29.77,8.03 34.33,10.67" fill="${c('UB', GOOD_TOP)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="12.45,16.63 7.89,14.00 12.45,11.37 17.01,14.00" fill="${GOOD_TOP}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="18.23,13.30 13.67,10.67 18.23,8.03 22.79,10.67" fill="${c('UL', GOOD_TOP)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="24.00,9.97 19.44,7.33 24.00,4.70 28.56,7.33" fill="${GOOD_TOP}" stroke="${STROKE}" stroke-width="0.6"/>
+
+        <!-- Front-Left Face (F) Stickers -->
+        <polygon points="23.39,24.35 18.83,21.72 18.83,26.98 23.39,29.62" fill="${GOOD_LEFT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="23.39,31.02 18.83,28.38 18.83,33.65 23.39,36.28" fill="${c('FR', GOOD_LEFT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="23.39,37.68 18.83,35.05 18.83,40.32 23.39,42.95" fill="${GOOD_LEFT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="17.62,21.02 13.06,18.38 13.06,23.65 17.62,26.28" fill="${c('UF', GOOD_LEFT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="17.62,27.68 13.06,25.05 13.06,30.32 17.62,32.95" fill="${GOOD_LEFT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="17.62,34.35 13.06,31.72 13.06,36.98 17.62,39.62" fill="${c('DF', GOOD_LEFT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="11.85,17.68 7.29,15.05 7.29,20.32 11.85,22.95" fill="${GOOD_LEFT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="11.85,24.35 7.29,21.72 7.29,26.98 11.85,29.62" fill="${c('FL', GOOD_LEFT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="11.85,31.02 7.29,28.38 7.29,33.65 11.85,36.28" fill="${GOOD_LEFT}" stroke="${STROKE}" stroke-width="0.6"/>
+
+        <!-- Front-Right Face (R) Stickers -->
+        <polygon points="24.61,24.35 29.17,21.72 29.17,26.98 24.61,29.62" fill="${GOOD_RIGHT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="24.61,31.02 29.17,28.38 29.17,33.65 24.61,36.28" fill="${c('FR', GOOD_RIGHT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="24.61,37.68 29.17,35.05 29.17,40.32 24.61,42.95" fill="${GOOD_RIGHT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="30.38,21.02 34.94,18.38 34.94,23.65 30.38,26.28" fill="${c('UR', GOOD_RIGHT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="30.38,27.68 34.94,25.05 34.94,30.32 30.38,32.95" fill="${GOOD_RIGHT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="30.38,34.35 34.94,31.72 34.94,36.98 30.38,39.62" fill="${c('DR', GOOD_RIGHT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="36.15,17.68 40.71,15.05 40.71,20.32 36.15,22.95" fill="${GOOD_RIGHT}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="36.15,24.35 40.71,21.72 40.71,26.98 36.15,29.62" fill="${c('BR', GOOD_RIGHT)}" stroke="${STROKE}" stroke-width="0.6"/>
+        <polygon points="36.15,31.02 40.71,28.38 40.71,33.65 36.15,36.28" fill="${GOOD_RIGHT}" stroke="${STROKE}" stroke-width="0.6"/>
+
+        <!-- Back/Bottom Hidden Edge Indicators (BL, DL, DB) along outer rim -->
+        ${badSet.has('BL') ? `<line x1="4.8" y1="21" x2="4.8" y2="27" stroke="${BAD_COLOR}" stroke-width="2.6" stroke-linecap="round"/>` : ''}
+        ${badSet.has('DL') ? `<line x1="11.5" y1="39.2" x2="17.5" y2="42.7" stroke="${BAD_COLOR}" stroke-width="2.6" stroke-linecap="round"/>` : ''}
+        ${badSet.has('DB') ? `<line x1="36.5" y1="39.2" x2="30.5" y2="42.7" stroke="${BAD_COLOR}" stroke-width="2.6" stroke-linecap="round"/>` : ''}
+      </svg>
+    `;
+  }
+
+  let currentEOData = null;
+  let activeMoveFilter = 'all';
+  let lastAnalyzedScramble = null;
+  let eoDebounceTimer = null;
+
+  function onScrambleChangedForAnalysis(rawScramble) {
+    const clean = (rawScramble || '').trim();
+    if (clean === lastAnalyzedScramble) return;
+    lastAnalyzedScramble = clean;
+
+    if (eoDebounceTimer) clearTimeout(eoDebounceTimer);
+    eoDebounceTimer = setTimeout(() => {
+      runEOAnalysis(clean);
+    }, 120);
+  }
+
+  async function runEOAnalysis(scrambleStr) {
+    if (!eoStatusSubtitle) return;
+    const maxMoves = parseInt(eoMaxMovesSelect ? eoMaxMovesSelect.value : '5', 10) || 5;
+
+    if (!scrambleStr) {
+      eoStatusSubtitle.textContent = 'Ingresa una mezcla arriba para calcular todos los EOs en los 3 ejes.';
+      return;
+    }
+
+    eoStatusSubtitle.textContent = `Calculando EOs hasta ${maxMoves} movimientos en los 3 ejes (FB, RL, UD)...`;
+    const t0 = performance.now();
+
+    try {
+      const data = await callSolverAsync('findEOs', { scramble: scrambleStr, maxMoves });
+      currentEOData = data;
+      const elapsed = Math.round(performance.now() - t0);
+      eoStatusSubtitle.textContent = `${data.total} EOs encontrados (hasta ${maxMoves} movs) en ${elapsed} ms`;
+      renderEOHints(data, maxMoves);
+      renderEOSolutionsList();
+
+      // Pre-fill Mallard input with the first EO if empty or if previous scramble changed
+      if (data.solutions && data.solutions.length > 0 && mallardEoInput) {
+        mallardEoInput.value = data.solutions[0].notation;
+      }
+    } catch (err) {
+      eoStatusSubtitle.textContent = 'Error al calcular EOs: ' + err.message;
+    }
+  }
+
+  function renderEOHints(data, maxMoves) {
+    if (!data) return;
+    if (eoTotalCountEl) eoTotalCountEl.textContent = data.total;
+    if (eoTotalNormalEl) eoTotalNormalEl.textContent = data.totalByType.Normal || 0;
+    if (eoTotalInverseEl) eoTotalInverseEl.textContent = data.totalByType.Inverse || 0;
+    if (eoTotalNissEl) eoTotalNissEl.textContent = data.totalByType.NISS || 0;
+
+    // 1. By Move Cards
+    if (eoByMoveGrid) {
+      eoByMoveGrid.innerHTML = '';
+      for (let m = 0; m <= maxMoves; m++) {
+        const info = data.totalByMove[m];
+        if (!info || info.total === 0) continue;
+        const card = document.createElement('div');
+        card.className = 'eo-move-card';
+        card.title = `Filtrar EOs de ${m} movimiento${m === 1 ? '' : 's'}`;
+        card.innerHTML = `
+          <div class="eo-move-card-title">${m} ${m === 1 ? 'Move' : 'Moves'}</div>
+          <div class="eo-move-card-sub">${info.total} Soluciones</div>
+          <div class="eo-move-card-breakdown">
+            <div class="eo-mini-stat">
+              <span class="eo-mini-stat-v">${info.Normal}</span>
+              <span class="eo-mini-stat-l">NORMAL</span>
+            </div>
+            <div class="eo-mini-stat">
+              <span class="eo-mini-stat-v">${info.Inverse}</span>
+              <span class="eo-mini-stat-l">INVERSE</span>
+            </div>
+            <div class="eo-mini-stat">
+              <span class="eo-mini-stat-v">${info.NISS}</span>
+              <span class="eo-mini-stat-l">NISS</span>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          setMoveFilterPill(String(m));
+        });
+        eoByMoveGrid.appendChild(card);
+      }
+    }
+
+    // 2. By Axis Cards (FB, RL, UD) with isometric 3D bad-edge mini-cubes
+    if (eoAxesGrid) {
+      eoAxesGrid.innerHTML = '';
+      const axesOrder = [
+        { key: 'FB', cls: 'axis-fb', label: 'FB Axis' },
+        { key: 'RL', cls: 'axis-rl', label: 'RL Axis' },
+        { key: 'UD', cls: 'axis-ud', label: 'UD Axis' }
+      ];
+
+      for (const axCfg of axesOrder) {
+        const axData = data.axisSummaries[axCfg.key];
+        if (!axData) continue;
+
+        const moveChips = [];
+        for (let m = 0; m <= maxMoves; m++) {
+          const c = axData.byMove[m] ? axData.byMove[m].total : 0;
+          if (c > 0) {
+            moveChips.push(`<span class="eo-axis-move-Chip">${m}m: ${c}</span>`);
+          }
+        }
+
+        const card = document.createElement('div');
+        card.className = `eo-axis-card ${axCfg.cls}`;
+        card.title = `Haz clic para filtrar soluciones del eje ${axCfg.key}`;
+        card.innerHTML = `
+          <div class="eo-axis-card-title">${axCfg.label} <span class="eo-axis-card-bad">(${axData.normBadCount} bad)</span></div>
+          <div class="eo-axis-minicubes">
+            <div class="eo-minicube-box" title="Aristas malas en Normal (${axData.normBadCount}): ${axData.normBadEdges.join(', ') || 'Ninguna'}">
+              ${renderBadEdgesMiniCubeSVG(axData.normBadEdges)}
+              <span class="eo-minicube-label">NORMAL (${axData.normBadCount})</span>
+            </div>
+            <div class="eo-minicube-box" title="Aristas malas en Inversa (${axData.invBadCount}): ${axData.invBadEdges.join(', ') || 'Ninguna'}">
+              ${renderBadEdgesMiniCubeSVG(axData.invBadEdges)}
+              <span class="eo-minicube-label">INVERSE (${axData.invBadCount})</span>
+            </div>
+          </div>
+          <div class="eo-axis-total-num">${axData.total}</div>
+          <div class="eo-axis-total-sub">Soluciones</div>
+          <div class="eo-move-card-breakdown">
+            <div class="eo-mini-stat">
+              <span class="eo-mini-stat-v">${axData.byType.Normal}</span>
+              <span class="eo-mini-stat-l">NORMAL</span>
+            </div>
+            <div class="eo-mini-stat">
+              <span class="eo-mini-stat-v">${axData.byType.Inverse}</span>
+              <span class="eo-mini-stat-l">INVERSE</span>
+            </div>
+            <div class="eo-mini-stat">
+              <span class="eo-mini-stat-v">${axData.byType.NISS}</span>
+              <span class="eo-mini-stat-l">NISS</span>
+            </div>
+          </div>
+          <div class="eo-axis-moves-row">
+            ${moveChips.join('')}
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          if (eoFilterAxis) {
+            eoFilterAxis.value = eoFilterAxis.value === axCfg.key ? 'all' : axCfg.key;
+            renderEOSolutionsList();
+          }
+        });
+        eoAxesGrid.appendChild(card);
+      }
+    }
+  }
+
+  function setMoveFilterPill(moveVal) {
+    activeMoveFilter = moveVal;
+    if (eoMoveFilterPills) {
+      eoMoveFilterPills.querySelectorAll('.eo-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.move === moveVal);
+      });
+    }
+    renderEOSolutionsList();
+  }
+
+  function renderEOSolutionsList() {
+    if (!eoSolutionsList || !currentEOData) return;
+
+    const typeVal = eoFilterType ? eoFilterType.value : 'all';
+    const axisVal = eoFilterAxis ? eoFilterAxis.value : 'all';
+    const rzpVal = eoFilterRzp ? eoFilterRzp.value : 'all';
+
+    const filtered = currentEOData.solutions.filter(sol => {
+      if (activeMoveFilter !== 'all' && sol.length !== parseInt(activeMoveFilter, 10)) return false;
+      if (typeVal !== 'all' && sol.type !== typeVal) return false;
+      if (axisVal !== 'all' && sol.axis !== axisVal) return false;
+      if (rzpVal === 'rzp' && !sol.hasRzp) return false;
+      if (rzpVal === 'arm' && !sol.hasArm) return false;
+      return true;
+    });
+
+    if (eoSolutionsListTitle) {
+      eoSolutionsListTitle.textContent = `Soluciones EO (${filtered.length})`;
+    }
+
+    eoSolutionsList.innerHTML = '';
+
+    if (filtered.length === 0) {
+      eoSolutionsList.innerHTML = `<div style="padding: 18px; text-align: center; color: #9a9ca8; font-size: 13px;">No hay soluciones EO que coincidan con los filtros seleccionados.</div>`;
+      return;
+    }
+
+    // Render up to 150 rows for smooth DOM performance
+    const slice = filtered.slice(0, 150);
+    slice.forEach((sol, idx) => {
+      const row = document.createElement('div');
+      row.className = 'eo-sol-row';
+
+      const axisBadgeCls = `axis-${sol.axis.toLowerCase()}`;
+      const drStatsHtml = (sol.drStats || []).map(st => {
+        const rzpCls = st.isRzp ? 'eo-rzp-tag ready' : 'eo-rzp-tag';
+        const starHtml = st.isArm ? '<span class="eo-arm-star" title="Cerca de DR / ARM Ready">★</span>' : '';
+        return `
+          <div class="eo-dr-stat-line">
+            <span>${st.axis}: <span class="${rzpCls}">${st.c}c${st.e}e</span> | ${st.armC}c${st.armE}e ${starHtml}</span>
+            <span class="eo-pairs-count" title="Pares esquina-arista formados">${st.pairs}</span>
+          </div>
+        `;
+      }).join('');
+
+      row.innerHTML = `
+        <div class="eo-sol-left">
+          <span class="eo-sol-idx">${idx + 1}.</span>
+          <span class="eo-sol-alg" title="Haz clic para cargar este EO en el editor y verlo en el cubo 3D">${escapeHtml(sol.notation)}</span>
+          <span class="eo-sol-len-badge">${sol.length}</span>
+          <span class="eo-sol-axis-badge ${axisBadgeCls}">${sol.axis}</span>
+        </div>
+        <div class="eo-sol-right">
+          <div class="eo-dr-stats-col">
+            ${drStatsHtml}
+          </div>
+          <button type="button" class="eo-dr-btn" title="Analizar mejores DRs y solves desde este EO (Estilo Mallard)">DR</button>
+        </div>
+      `;
+
+      // Click on EO notation -> load into main editor & highlight that EO axis
+      const algEl = row.querySelector('.eo-sol-alg');
+      if (algEl) {
+        algEl.addEventListener('click', () => {
+          movesInput.value = `${sol.notation} // EO-${sol.axis} (${sol.length}/${sol.length})`;
+          if (highlightSelect) {
+            highlightSelect.value = `EO_${sol.axis}`;
+          }
+          updateSolution();
+          setStep(parsedSolution.finalMoves.length);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showToast(`EO cargado en el editor: ${sol.notation} (${sol.axis})`);
+        });
+      }
+
+      // Click on DR button -> load into Mallard analyzer and run immediately
+      const drBtn = row.querySelector('.eo-dr-btn');
+      if (drBtn) {
+        drBtn.addEventListener('click', () => {
+          if (mallardEoInput) {
+            mallardEoInput.value = sol.notation;
+          }
+          if (mallardSection) {
+            mallardSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          runMallardAnalysis(sol.notation);
+        });
+      }
+
+      eoSolutionsList.appendChild(row);
+    });
+  }
+
+  // Filter Event Listeners for EO Trainer
+  if (eoMaxMovesSelect) {
+    eoMaxMovesSelect.addEventListener('change', () => {
+      runEOAnalysis(scrambleInput.value.trim());
+    });
+  }
+  if (eoMoveFilterPills) {
+    eoMoveFilterPills.querySelectorAll('.eo-pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setMoveFilterPill(btn.dataset.move);
+      });
+    });
+  }
+  if (eoFilterType) eoFilterType.addEventListener('change', renderEOSolutionsList);
+  if (eoFilterAxis) eoFilterAxis.addEventListener('change', renderEOSolutionsList);
+  if (eoFilterRzp) eoFilterRzp.addEventListener('change', renderEOSolutionsList);
+
+  // --- 2. Mallard DR & Finish Analyzer Logic ---
+  let currentMallardData = null;
+
+  async function runMallardAnalysis(customEoStr) {
+    const scrambleStr = scrambleInput.value.trim();
+    const eoStr = (customEoStr !== undefined ? customEoStr : (mallardEoInput ? mallardEoInput.value : '')).trim();
+
+    if (!scrambleStr) {
+      if (mallardStatusBar) mallardStatusBar.textContent = 'Primero ingresa una mezcla válida arriba.';
+      return;
+    }
+    if (!eoStr) {
+      if (mallardStatusBar) mallardStatusBar.textContent = 'Ingresa o selecciona una secuencia de EO para analizar.';
+      return;
+    }
+
+    if (mallardStatusBar) {
+      mallardStatusBar.innerHTML = `Analizando mejores <b>DRs</b> y <b>Soluciones Completas (Domino Finish)</b> a partir del EO <code>${escapeHtml(eoStr)}</code>...`;
+    }
+    if (mallardResultsGrid) mallardResultsGrid.innerHTML = '';
+
+    const t0 = performance.now();
+    try {
+      const res = await callSolverAsync('analyzeMallard', {
+        scramble: scrambleStr,
+        eo: eoStr,
+        options: { maxDRSolutions: 18, maxExtraDRMoves: 10 }
+      });
+      currentMallardData = res;
+      const elapsed = Math.round(performance.now() - t0);
+
+      if (!res.validEO) {
+        if (mallardStatusBar) {
+          mallardStatusBar.innerHTML = `<span style="color:#f87171;">${escapeHtml(res.message)}</span>`;
+        }
+        return;
+      }
+
+      if (mallardStatusBar) {
+        mallardStatusBar.innerHTML = `EO válido en eje <b>${res.eoAxes.join(', ')}</b> (${res.eoLen} movs) &bull; Se encontraron <b>${res.drResults.length} soluciones DR + Finish</b> en ${elapsed} ms.`;
+      }
+      renderMallardResults();
+    } catch (err) {
+      if (mallardStatusBar) {
+        mallardStatusBar.textContent = 'Error en análisis Mallard: ' + err.message;
+      }
+    }
+  }
+
+  function renderMallardResults() {
+    if (!mallardResultsGrid || !currentMallardData || !currentMallardData.validEO) return;
+
+    const axisFilter = mallardFilterAxis ? mallardFilterAxis.value : 'all';
+    const dirFilter = mallardFilterDir ? mallardFilterDir.value : 'all';
+
+    const list = (currentMallardData.drResults || []).filter(item => {
+      if (axisFilter !== 'all' && item.drAxis !== axisFilter) return false;
+      if (dirFilter !== 'all') {
+        if (dirFilter === 'RZP') {
+          if (!item.direction.includes('RZP')) return false;
+        } else if (item.direction !== dirFilter) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    mallardResultsGrid.innerHTML = '';
+
+    if (list.length === 0) {
+      mallardResultsGrid.innerHTML = `<div style="padding: 16px; color: #9a9ca8; font-size: 13px;">No se encontraron DRs con los filtros seleccionados.</div>`;
+      return;
+    }
+
+    list.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'mallard-card';
+
+      card.innerHTML = `
+        <div class="mallard-card-top">
+          <div class="mallard-badges">
+            <span class="mallard-badge-dr">#${idx + 1} &bull; EO-${item.eoAxis} &rarr; DR-${item.drAxis}</span>
+            <span class="mallard-badge-dir">${escapeHtml(item.direction)} &bull; DR en ${item.totalDRLen}m</span>
+          </div>
+          <span class="mallard-ftm-pill" title="Longitud de la solución completa (EO + DR + Finish)">Solve: ${item.totalSolveFTM} FTM</span>
+        </div>
+        <div class="mallard-steps-box">${highlightFMC(item.fmcReconstruction)}</div>
+        <div class="mallard-card-actions">
+          <button type="button" class="mallard-action-btn btn-load-dr" title="Cargar solo hasta el DR en el editor principal">Cargar Solo DR (${item.totalDRLen}m)</button>
+          <button type="button" class="mallard-action-btn primary btn-load-solve" title="Cargar la solución completa comentada en el editor principal">Cargar Solve Completa (${item.totalSolveFTM} FTM)</button>
+        </div>
+      `;
+
+      const btnLoadDR = card.querySelector('.btn-load-dr');
+      if (btnLoadDR) {
+        btnLoadDR.addEventListener('click', () => {
+          movesInput.value = item.drOnlyReconstruction;
+          updateSolution();
+          setStep(parsedSolution.finalMoves.length);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showToast(`DR-${item.drAxis} (${item.totalDRLen} movs) cargado en el editor`);
+        });
+      }
+
+      const btnLoadSolve = card.querySelector('.btn-load-solve');
+      if (btnLoadSolve) {
+        btnLoadSolve.addEventListener('click', () => {
+          movesInput.value = item.fmcReconstruction;
+          if (highlightSelect) highlightSelect.value = 'Full';
+          updateSolution();
+          setStep(parsedSolution.finalMoves.length);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showToast(`Solución Mallard (${item.totalSolveFTM} FTM) cargada en el editor`);
+        });
+      }
+
+      mallardResultsGrid.appendChild(card);
+    });
+  }
+
+  if (btnRunMallard) {
+    btnRunMallard.addEventListener('click', () => runMallardAnalysis());
+  }
+  if (mallardEoInput) {
+    mallardEoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        runMallardAnalysis();
+      }
+    });
+  }
+  if (mallardFilterAxis) mallardFilterAxis.addEventListener('change', renderMallardResults);
+  if (mallardFilterDir) mallardFilterDir.addEventListener('change', renderMallardResults);
+
+  // --- 3. Optimal Solver (Nissy style on-demand button with Stop & Live Timer) ---
+  let isOptimalRunning = false;
+  let optimalTimerInterval = null;
+  let optimalStartTime = 0;
+  let streamedOptimalSolutions = [];
+
+  function renderOptimalSolutions(solutions) {
+    if (!optimalResultsList) return;
+    optimalResultsList.innerHTML = '';
+
+    solutions.forEach((sol, idx) => {
+      const row = document.createElement('div');
+      row.className = 'optimal-sol-row';
+      row.innerHTML = `
+        <div class="optimal-sol-left">
+          <span class="optimal-ftm-badge">#${idx + 1} &bull; ${sol.ftm} FTM</span>
+          <span class="optimal-sol-alg">${escapeHtml(sol.alg)}</span>
+        </div>
+        <div class="optimal-sol-actions">
+          <button type="button" class="mallard-action-btn btn-copy-opt">Copiar</button>
+          <button type="button" class="mallard-action-btn primary btn-load-opt">Cargar en Editor</button>
+        </div>
+      `;
+
+      const copyBtn = row.querySelector('.btn-copy-opt');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(`${sol.alg} (${sol.ftm})`).then(() => {
+            showToast(`Copiado: ${sol.alg} (${sol.ftm} FTM)`);
+          });
+        });
+      }
+
+      const loadBtn = row.querySelector('.btn-load-opt');
+      if (loadBtn) {
+        loadBtn.addEventListener('click', () => {
+          movesInput.value = `${sol.alg} // Solución Óptima (${sol.ftm} FTM)`;
+          if (highlightSelect) highlightSelect.value = 'Full';
+          updateSolution();
+          setStep(parsedSolution.finalMoves.length);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showToast(`Solución de ${sol.ftm} FTM cargada en el editor`);
+        });
+      }
+
+      optimalResultsList.appendChild(row);
+    });
+  }
+
+  function stopOptimalCalculation(userCancelled = false) {
+    isOptimalRunning = false;
+    if (optimalTimerInterval) {
+      clearInterval(optimalTimerInterval);
+      optimalTimerInterval = null;
+    }
+    if (btnCalcOptimal) btnCalcOptimal.style.display = '';
+    if (btnStopOptimal) btnStopOptimal.style.display = 'none';
+
+    if (userCancelled) {
+      // Terminate current worker immediately and respawn a fresh one
+      if (solverWorker) {
+        solverWorker.terminate();
+        workerCallbacks.clear();
+        solverWorker = FMCSolver.createSolverWorker();
+        bindWorkerEvents(solverWorker);
+      }
+      const elapsedSec = ((performance.now() - optimalStartTime) / 1000).toFixed(1);
+      if (optimalStatusBar) {
+        optimalStatusBar.innerHTML = `Búsqueda detenida a los ${elapsedSec}s. ${streamedOptimalSolutions.length > 0 ? `Mejor solución encontrada: <b>${streamedOptimalSolutions[0].ftm} FTM</b>.` : ''}`;
+      }
+    }
+  }
+
+  if (btnCalcOptimal) {
+    btnCalcOptimal.addEventListener('click', async () => {
+      if (isOptimalRunning) return;
+      const scrambleStr = scrambleInput.value.trim();
+      if (!scrambleStr) {
+        if (optimalStatusBar) optimalStatusBar.textContent = 'Primero ingresa una mezcla válida arriba.';
+        return;
+      }
+
+      const timeLimitMs = parseInt(optimalTimeSelect ? optimalTimeSelect.value : '8000', 10) || 8000;
+      isOptimalRunning = true;
+      streamedOptimalSolutions = [];
+      optimalStartTime = performance.now();
+      if (optimalResultsList) optimalResultsList.innerHTML = '';
+
+      btnCalcOptimal.style.display = 'none';
+      if (btnStopOptimal) btnStopOptimal.style.display = '';
+
+      let currentDepthInfo = '';
+      optimalTimerInterval = setInterval(() => {
+        const sec = ((performance.now() - optimalStartTime) / 1000).toFixed(1);
+        const bestTxt = streamedOptimalSolutions.length > 0
+          ? ` &bull; Mejor actual: <b>${streamedOptimalSolutions[0].ftm} FTM</b>`
+          : '';
+        if (optimalStatusBar) {
+          optimalStatusBar.innerHTML = `Calculando solución óptima en segundo plano... <b>${sec}s</b>${currentDepthInfo}${bestTxt}`;
+        }
+      }, 100);
+
+      try {
+        const res = await callSolverAsync(
+          'findOptimal',
+          {
+            scramble: scrambleStr,
+            options: { timeLimitMs, maxSolutions: 6 }
+          },
+          (prog) => {
+            if (!isOptimalRunning) return;
+            if (prog.type === 'progress' && prog.depth !== undefined) {
+              currentDepthInfo = ` (Fase 1 prof. ${prog.depth})`;
+            } else if (prog.type === 'solution') {
+              streamedOptimalSolutions.push({ alg: prog.alg, ftm: prog.ftm });
+              streamedOptimalSolutions.sort((a, b) => a.ftm - b.ftm);
+              streamedOptimalSolutions = streamedOptimalSolutions.slice(0, 6);
+              renderOptimalSolutions(streamedOptimalSolutions);
+            }
+          }
+        );
+
+        if (!isOptimalRunning) return;
+        stopOptimalCalculation(false);
+
+        const totalSec = (res.elapsedMs / 1000).toFixed(2);
+        if (res.solutions && res.solutions.length > 0) {
+          streamedOptimalSolutions = res.solutions;
+          renderOptimalSolutions(res.solutions);
+          if (optimalStatusBar) {
+            optimalStatusBar.innerHTML = `Búsqueda completada en <b>${totalSec}s</b> &bull; Mejor solución encontrada: <b>${res.bestFTM} FTM</b> (${res.solutions.length} soluciones mostradas).`;
+          }
+        } else {
+          if (optimalStatusBar) {
+            optimalStatusBar.textContent = 'No se encontraron soluciones dentro del tiempo límite.';
+          }
+        }
+      } catch (err) {
+        if (!isOptimalRunning) return;
+        stopOptimalCalculation(false);
+        if (optimalStatusBar) {
+          optimalStatusBar.textContent = 'Error al calcular solución óptima: ' + err.message;
+        }
+      }
+    });
+  }
+
+  if (btnStopOptimal) {
+    btnStopOptimal.addEventListener('click', () => {
+      stopOptimalCalculation(true);
+    });
   }
 
   // --- Parse URL Parameters on Load ---
