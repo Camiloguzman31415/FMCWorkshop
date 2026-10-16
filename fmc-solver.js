@@ -2059,6 +2059,7 @@
     findOptimalSolutions,
     getBadEdgeNames,
     parseMovesToIndices,
+    parseNissSequence,
     indicesToAlg,
     createSolverWorker
   };

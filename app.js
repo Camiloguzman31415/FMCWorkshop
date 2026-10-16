@@ -942,6 +942,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset or clamp current step
     setStep(currentStep);
 
+    // Auto-sync detected EO from steps into Mallard input
+    if (typeof syncEOFromStepsToMallard === 'function') {
+      syncEOFromStepsToMallard();
+    }
+
     // Trigger EO Finder & Analysis Suite update if scramble changed
     if (typeof onScrambleChangedForAnalysis === 'function') {
       onScrambleChangedForAnalysis(rawScramble);
@@ -1971,6 +1976,125 @@ B2 L2 D2 F2//M slice (4/20)
     `;
   }
 
+  // --- Auto-detect and sync EO from solution steps to Mallard DR Analyzer ---
+  let lastAutoDetectedEO = null;
+
+  function cleanEONotation(str) {
+    if (!str || typeof str !== 'string') return null;
+    const cleaned = str
+      .replace(/\s+/g, ' ')
+      .replace(/\s+([2'])/g, '$1')
+      .replace(/\(\s+/g, '(')
+      .replace(/\s+\)/g, ')')
+      .trim();
+    if (!/[UDFBRL]/i.test(cleaned)) return null;
+    return cleaned;
+  }
+
+  function extractEOFromSteps(movesText, scrambleStr = '') {
+    if (!movesText || typeof movesText !== 'string') return null;
+    const lines = movesText.split(/\r?\n/);
+
+    // 1. Look for explicit EO comment or marker (e.g. // EO, // EO (2/2), // EO-UD, /* EO */)
+    for (let i = 0; i < lines.length; i++) {
+      const rawLine = lines[i];
+      const trimmed = rawLine.trim();
+      if (!trimmed) continue;
+
+      const hasEoComment = /(?:\/\/[^\n]*?\beo\b|\/\*[\s\S]*?\beo\b[\s\S]*?\*\/)/i.test(trimmed);
+      const startsWithEo = /^eo\b/i.test(trimmed);
+
+      if (hasEoComment || startsWithEo) {
+        let movePart = trimmed
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/.*$/g, '')
+          .replace(/^eo\s*[:\-]\s*/i, '')
+          .trim();
+
+        // If comment was on its own line (e.g. "// EO (2/2)"), check next line
+        if (!movePart && i + 1 < lines.length) {
+          movePart = lines[i + 1]
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/\/\/.*$/g, '')
+            .trim();
+        }
+
+        const cleanEO = cleanEONotation(movePart);
+        if (cleanEO) return cleanEO;
+      }
+    }
+
+    // 2. Fallback: check if the first non-comment move line solves EO for the current scramble
+    if (scrambleStr && typeof FMCSolver !== 'undefined' && FMCSolver.getBadEdgeNames && FMCSolver.parseMovesToIndices) {
+      for (let i = 0; i < lines.length; i++) {
+        const lineWithoutComments = lines[i]
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/.*$/g, '')
+          .trim();
+        if (!lineWithoutComments) continue;
+
+        const cleanCandidate = cleanEONotation(lineWithoutComments);
+        if (cleanCandidate) {
+          try {
+            const scrambleMoves = FMCSolver.parseMovesToIndices(scrambleStr);
+            const parseNiss = (typeof FMCSolver.parseNissSequence === 'function')
+              ? FMCSolver.parseNissSequence
+              : ((s) => {
+                  const cl = s.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+                  const n = [], inv = [];
+                  let inI = false, buf = '';
+                  for (let ci = 0; ci < cl.length; ci++) {
+                    const ch = cl[ci];
+                    if (ch === '(') { if (buf.trim()) n.push(...FMCSolver.parseMovesToIndices(buf)); buf = ''; inI = true; }
+                    else if (ch === ')') { if (buf.trim()) inv.push(...FMCSolver.parseMovesToIndices(buf)); buf = ''; inI = false; }
+                    else { buf += ch; }
+                  }
+                  if (buf.trim()) { if (inI) inv.push(...FMCSolver.parseMovesToIndices(buf)); else n.push(...FMCSolver.parseMovesToIndices(buf)); }
+                  return { normalMoves: n, inverseMoves: inv };
+                });
+            const { normalMoves: eoNorm, inverseMoves: eoInv } = parseNiss(cleanCandidate);
+            const INV = [2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 17, 16, 15];
+            const invIndices = (indices) => indices.slice().reverse().map(m => INV[m]);
+            const postEONormalMoves = [...invIndices(eoInv), ...scrambleMoves, ...eoNorm];
+            for (const ax of ['FB', 'RL', 'UD']) {
+              if (FMCSolver.getBadEdgeNames(postEONormalMoves, ax).length === 0) {
+                return cleanCandidate;
+              }
+            }
+          } catch (e) {}
+        }
+        break; // Only test the first move line
+      }
+    }
+
+    return null;
+  }
+
+  function syncEOFromStepsToMallard(force = false) {
+    if (!mallardEoInput) return;
+    if (!force && document.activeElement === mallardEoInput) return;
+
+    const rawMoves = movesInput ? movesInput.value : '';
+    const rawScramble = scrambleInput ? scrambleInput.value.trim() : '';
+    const detectedEO = extractEOFromSteps(rawMoves, rawScramble);
+
+    if (detectedEO) {
+      if (force || mallardEoInput.value !== detectedEO) {
+        mallardEoInput.value = detectedEO;
+        lastAutoDetectedEO = detectedEO;
+      }
+    } else if (!rawMoves.trim()) {
+      if (lastAutoDetectedEO !== null) {
+        lastAutoDetectedEO = null;
+        if (currentEOData && currentEOData.solutions && currentEOData.solutions.length > 0) {
+          mallardEoInput.value = currentEOData.solutions[0].notation;
+        } else {
+          mallardEoInput.value = '';
+        }
+      }
+    }
+  }
+
   let currentEOData = null;
   let activeMoveFilter = 'all';
   let lastAnalyzedScramble = null;
@@ -2007,9 +2131,15 @@ B2 L2 D2 F2//M slice (4/20)
       renderEOHints(data, maxMoves);
       renderEOSolutionsList();
 
-      // Pre-fill Mallard input with the first EO if empty or if previous scramble changed
-      if (data.solutions && data.solutions.length > 0 && mallardEoInput) {
-        mallardEoInput.value = data.solutions[0].notation;
+      // Pre-fill Mallard input: prioritize the EO extracted from user's steps!
+      const stepEO = extractEOFromSteps(movesInput ? movesInput.value : '', scrambleStr);
+      if (stepEO && mallardEoInput) {
+        mallardEoInput.value = stepEO;
+        lastAutoDetectedEO = stepEO;
+      } else if (data.solutions && data.solutions.length > 0 && mallardEoInput) {
+        if (!mallardEoInput.value.trim()) {
+          mallardEoInput.value = data.solutions[0].notation;
+        }
       }
     } catch (err) {
       eoStatusSubtitle.textContent = 'Error al calcular EOs: ' + err.message;
