@@ -144,6 +144,14 @@ html, body {
   background-color: rgba(255, 183, 77, 0.12);
 }
 
+.header-btn.info-btn {
+  color: #38bdf8;
+}
+
+.header-btn.info-btn:hover {
+  background-color: rgba(56, 189, 248, 0.12);
+}
+
 /* Main Split View */
 .main-content {
   display: grid;
@@ -1151,6 +1159,10 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   overflow: hidden;
 }
 
+.modal-card.modal-wide {
+  max-width: 720px;
+}
+
 .modal-overlay.active .modal-card {
   transform: translateY(0);
 }
@@ -1196,16 +1208,58 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
 
 .modal-body h4 {
   color: #ffffff;
-  font-size: 14px;
-  margin-bottom: 6px;
+  font-size: 14.5px;
+  margin-bottom: 8px;
+}
+
+.info-section-card {
+  background-color: #1c1d22;
+  border: 1px solid #353742;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.info-section-card.info-can-do {
+  border-left: 3px solid #22c55e;
+}
+
+.info-section-card.info-cannot-do {
+  border-left: 3px solid #f59e0b;
+}
+
+.modal-list {
+  padding-left: 18px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-list li {
+  line-height: 1.55;
+}
+
+.modal-link {
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px dashed rgba(56, 189, 248, 0.5);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.modal-link:hover {
+  color: #7dd3fc;
+  border-bottom-style: solid;
+  border-bottom-color: #7dd3fc;
 }
 
 .modal-body pre, .modal-body code {
   font-family: ui-monospace, monospace;
-  background-color: #1a1a1f;
-  padding: 3px 6px;
+  background-color: #141519;
+  padding: 2px 6px;
   border-radius: 4px;
   color: #81c784;
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .setting-item {

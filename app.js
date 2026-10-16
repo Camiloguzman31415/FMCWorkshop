@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCopyShare = document.getElementById('btn-copy-share');
   const btnInvert = document.getElementById('btn-invert');
   const btnNewRecon = document.getElementById('btn-new-recon');
+  const btnInfo = document.getElementById('btn-info');
   const btnDonate = document.getElementById('btn-donate');
   const btnLoadExample = document.getElementById('btn-load-example');
 
@@ -42,8 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modals
   const btnSettings = document.getElementById('btn-settings');
   const settingsModal = document.getElementById('settings-modal');
+  const infoModal = document.getElementById('info-modal');
   const donateModal = document.getElementById('donate-modal');
   const closeSettings = document.getElementById('close-settings');
+  const closeInfo = document.getElementById('close-info');
   const closeDonate = document.getElementById('close-donate');
   const animSpeedSelect = document.getElementById('anim-speed');
   const perspectiveModeSelect = document.getElementById('perspective-mode');
@@ -1511,6 +1514,18 @@ B2 L2 D2 F2//M slice (4/20)
     settingsModal.classList.remove('active');
   });
 
+  if (btnInfo && infoModal) {
+    btnInfo.addEventListener('click', () => {
+      infoModal.classList.add('active');
+    });
+  }
+
+  if (closeInfo && infoModal) {
+    closeInfo.addEventListener('click', () => {
+      infoModal.classList.remove('active');
+    });
+  }
+
   btnDonate.addEventListener('click', () => {
     donateModal.classList.add('active');
   });
@@ -1520,7 +1535,7 @@ B2 L2 D2 F2//M slice (4/20)
   });
 
   // Close modals clicking on backdrop
-  [settingsModal, donateModal].forEach(m => {
+  [settingsModal, infoModal, donateModal].filter(Boolean).forEach(m => {
     m.addEventListener('click', (e) => {
       if (e.target === m) m.classList.remove('active');
     });

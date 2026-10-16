@@ -88,6 +88,12 @@
           </svg>
           <span>New Recon</span>
         </button>
+        <button class="header-btn info-btn" id="btn-info" title="Guía de notaciones y qué se puede hacer en la página">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <span>Información</span>
+        </button>
         <button class="header-btn accent" id="btn-donate" title="Reconocimientos y Agradecimientos">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -691,23 +697,126 @@
       </div>
     </div>
 
+    <!-- Information & Notation Guide Modal -->
+    <div class="modal-overlay" id="info-modal">
+      <div class="modal-card modal-wide">
+        <div class="modal-header">
+          <h3 class="modal-title">Información, Notaciones y Guía de Uso</h3>
+          <button class="modal-close-btn" id="close-info">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="info-section-card">
+            <h4>1. Notaciones Generales en el Editor (Pasos y Mezcla)</h4>
+            <ul class="modal-list">
+              <li>
+                <strong>Movimientos estándar (FTM):</strong> Caras exteriores <code>U, D, R, L, F, B</code> con sentido horario (<code>R</code>), antihorario (<code>R'</code>) y doble giro (<code>R2</code>).
+              </li>
+              <li>
+                <strong>Giros anchos, capas medias y rotaciones:</strong> Se aceptan capas medias (<code>M, E, S</code>), movimientos anchos (<code>u, d, r, l, f, b</code> o <code>Uw, Dw, Rw, Lw, Fw, Bw</code>) y rotaciones del cubo (<code>x, y, z</code>). El motor los traduce y simplifica automáticamente a movimientos estándar en la caja de <strong>Resultado</strong>.
+              </li>
+              <li>
+                <strong>NISS (<em>Normal-Inverse Scramble Switch</em>):</strong> Escribe movimientos entre paréntesis <code>( ... )</code> para aplicarlos sobre la <strong>mezcla inversa</strong>. Ejemplo: <code>F' ( L' F2 L' F )</code> ejecuta <code>F'</code> en normal y luego <code>L' F2 L' F</code> en la inversa, generando la solución lineal combinada de forma automática.
+              </li>
+              <li>
+                <strong>Comentarios por línea o bloque:</strong> Todo lo escrito después de <code>//</code> en una línea (ej. <code>// EO (5/5)</code>) o entre <code>/* ... */</code> se resalta en el editor pero se ignora en el cálculo de movimientos.
+              </li>
+              <li>
+                <strong>Inserciones (<code>@</code> o <code>*</code>):</strong> Coloca un marcador como <code>@</code>, <code>@@</code>, <code>@1</code>, <code>@2</code> o <code>*</code>, <code>*1</code> dentro de tu esqueleto, y define la inserción abajo con <code>@= L' U2 L F2 R'</code> o <code>*1 = ...</code>. La página reemplaza el marcador y cancela movimientos adyacentes automáticamente.
+              </li>
+              <li>
+                <strong>Conmutadores y Conjugados:</strong>
+                <code>[A, B]</code> se expande automáticamente a <code>A B A' B'</code>, y <code>[A: B]</code> se expande a <code>A B A'</code>.
+              </li>
+            </ul>
+          </div>
+
+          <div class="info-section-card">
+            <h4>2. Glosario de Métricas del Analizador FMC</h4>
+            <ul class="modal-list">
+              <li><strong>EO (<code>FB</code>, <code>RL</code>, <code>UD</code>):</strong> Orientación de las 12 aristas respecto al eje elegido. Los mini-cubos 3D muestran en color magenta las <em>aristas malas</em> restantes en los otros dos ejes.</li>
+              <li><strong><code>XcYe</code> (RZP):</strong> Cantidad de esquinas malas (<code>Xc</code>) y aristas malas (<code>Ye</code>) hacia Domino Reduction en otro eje después de terminar el EO.</li>
+              <li><strong><code>ARM ★</code>:</strong> Indica que el estado `XcYe` es directamente reducible a Domino (estado válido de <em>Axis Reduction Method</em> / RZP útil).</li>
+              <li><strong><code>Pares</code>:</strong> Número de pares esquina-arista (`1x1x2`) ya unidos al terminar el EO.</li>
+              <li><strong>DR (<em>Domino Reduction</em>) y HTR (<em>Half Turn Reduction</em>):</strong> Fases donde el cubo se reduce al subgrupo <code>&lt;U, D, R2, L2, F2, B2&gt;</code> (DR) o únicamente giros dobles <code>&lt;U2, D2, R2, L2, F2, B2&gt;</code> (HTR).</li>
+            </ul>
+          </div>
+
+          <div class="info-section-card info-can-do">
+            <h4>3. ¿Qué SE PUEDE hacer en la página?</h4>
+            <ul class="modal-list">
+              <li><strong>Reconstruir soluciones en tiempo real:</strong> Escribir cualquier solución con NISS, inserciones y comentarios, ver el conteo exacto en <strong>FTM</strong>, reproducir paso a paso en el <strong>Cubo 3D</strong> o <strong>Vista 2D</strong> y filtrar el coloreado por etapa (<code>Full Cube</code>, <code>EO</code>, <code>DR</code>, <code>HTR</code>).</li>
+              <li><strong>Practicar con Cronómetro Oficial:</strong> Usar el temporizador integrado de <strong>60:00 minutos</strong> y generar mezclas aleatorias al instante.</li>
+              <li><strong>Calcular todos los EOs automáticamente (3 Ejes):</strong> Al poner una mezcla, la página calcula sola todos los EOs de hasta <strong>4, 5 o 6 movimientos</strong> en Normal, Inversa y NISS, con filtros por longitud, eje, tipo y RZP.</li>
+              <li><strong>Analizar DR + Domino Finish (Estilo Mallard):</strong> Presionar el botón <code>DR</code> en cualquier EO (o escribir uno propio) para hallar los mejores caminos a DR (Directo, Inverso y RZP + NISS) y su finalización completa (<em>Finish</em>) hasta resolver el cubo.</li>
+              <li><strong>Calcular la Solución Más Óptima (Estilo Nissy):</strong> Usar el botón <strong>Calcular Óptimo</strong> para ejecutar <code>solve optimal</code> en segundo plano y hallar la solución directa más corta posible para la mezcla actual.</li>
+              <li><strong>Compartir y personalizar:</strong> Copiar la reconstrucción completa, generar un enlace único con la mezcla y solución, u ocultar/mostrar cualquier panel de análisis.</li>
+            </ul>
+          </div>
+
+          <div class="info-section-card info-cannot-do">
+            <h4>4. ¿Qué NO se puede hacer (Limitaciones actuales)?</h4>
+            <ul class="modal-list">
+              <li><strong>No usar paréntesis NISS anidados <code>(( ... ))</code>:</strong> Los paréntesis indican qué bloques van en la mezcla inversa; no se deben anidar unos dentro de otros.</li>
+              <li><strong>No busca inserciones automáticas sobre esqueletos incompletos:</strong> Puedes evaluar tus propias inserciones con <code>@</code> o <code>*</code>, pero la herramienta no busca sola dónde insertar un <em>3-cycle</em> de esquinas/aristas como un <em>Insertion Finder</em> dedicado.</li>
+              <li><strong>Límite de 6 movimientos en EO:</strong> El buscador de EO está limitado hasta 6 movimientos para ejecutarse de forma instantánea sin saturar la memoria del navegador.</li>
+              <li><strong>El analizador Mallard requiere partir de un EO válido:</strong> Para buscar DR y Finish en la sección Mallard, la secuencia de entrada debe resolver el EO en al menos uno de los 3 ejes (<code>FB</code>, <code>RL</code> o <code>UD</code>).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recognition Modal -->
     <div class="modal-overlay" id="donate-modal">
-      <div class="modal-card">
+      <div class="modal-card modal-wide">
         <div class="modal-header">
-          <h3 class="modal-title">Reconocimientos y Créditos</h3>
+          <h3 class="modal-title">Reconocimientos, Inspiración y Créditos</h3>
           <button class="modal-close-btn" id="close-donate">&times;</button>
         </div>
         <div class="modal-body">
-          <p><strong>FMCWorkshop</strong> es una herramienta interactiva diseñada para aprender, analizar y practicar la categoría <em>Fewest Moves (FMC)</em> del Cubo de Rubik.</p>
-          <p style="margin-top: 10px;"><strong>Reconocimientos especiales a la comunidad:</strong></p>
-          <ul style="padding-left: 18px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
-            <li><strong>Gil Zussman</strong>: Por la idea, flujo y diseño conceptual de la herramienta original FMCWorkshop.</li>
-            <li><strong>Sebastiano Tronto</strong>: Creador de <em>NISSY</em>, software pionero en búsqueda y análisis algorítmico de NISS.</li>
-            <li><strong>Baiqiang</strong>: Creador y mantenedor de <em>Insertion Finder</em> y <em>333.fm</em>.</li>
-            <li><strong>Comunidad WCA & FMC</strong>: A todos los solucionadores y documentalistas que enriquecen y comparten técnicas de Fewest Moves.</li>
-          </ul>
-          <p style="margin-top: 12px; color: #a0a0b0;">¡Disfruta encontrando soluciones cada vez más cortas!</p>
+          <p><strong>FMCWorkshop</strong> es una suite interactiva todo-en-uno para aprender, reconstruir, analizar y entrenar la categoría <em>Fewest Moves Challenge (FMC)</em> del Cubo de Rubik directamente desde el navegador.</p>
+
+          <div class="info-section-card">
+            <h4>Herramientas y Proyectos de Referencia (con enlaces):</h4>
+            <ul class="modal-list">
+              <li>
+                <strong>Gil Zussman — <a href="https://fmcworkshop.com/" target="_blank" rel="noopener noreferrer" class="modal-link">FMCWorkshop Original</a>:</strong>
+                Por la idea original, el diseño conceptual del editor interactivo de reconstrucciones FMC, soporte de NISS en vivo y visualización de fases.
+              </li>
+              <li>
+                <strong>EO Trainer FMC — <a href="https://eotrainerfmc.com/" target="_blank" rel="noopener noreferrer" class="modal-link">eotrainerfmc.com</a>:</strong>
+                Inspiración para nuestro panel de <em>Orientación de Aristas (EO en 3 Ejes)</em> hasta 6 movimientos, tarjetas de desglose por longitud/eje, mini-cubos isométricos 3D de aristas malas y métricas RZP (<code>XcYe</code>, <code>ARM ★</code> y conteo de pares).
+              </li>
+              <li>
+                <strong>Joba — <a href="https://joba.me/mallard/" target="_blank" rel="noopener noreferrer" class="modal-link">Mallard (joba.me/mallard)</a>:</strong>
+                Inspiración para el <em>Analizador de DR + Domino Finish</em> a partir de un EO específico, evaluando continuaciones en Normal, Inversa (NISS) y variaciones con RZP + NISS hasta el cubo resuelto.
+              </li>
+              <li>
+                <strong>Sebastiano Tronto — <a href="https://nissy.tronto.net/" target="_blank" rel="noopener noreferrer" class="modal-link">Nissy</a> &amp; <a href="https://nissyonline.com/" target="_blank" rel="noopener noreferrer" class="modal-link">Nissy Online</a>:</strong>
+                Creador de <em>Nissy</em>, el asistente algorítmico de referencia en FMC, en el que se inspira nuestro motor por coordenadas, tablas de poda y el <em>Solucionador Óptimo (<code>solve optimal</code>)</em> en segundo plano.
+              </li>
+              <li>
+                <strong>Baiqiang — <a href="https://333.fm/" target="_blank" rel="noopener noreferrer" class="modal-link">333.fm / Insertion Finder</a>:</strong>
+                Creador y mantenedor de <em>Insertion Finder</em> y la plataforma <em>333.fm</em>.
+              </li>
+              <li>
+                <strong>Tecnología 3D &amp; Comunidad — <a href="https://threejs.org/" target="_blank" rel="noopener noreferrer" class="modal-link">Three.js</a> &amp; <a href="https://www.worldcubeassociation.org/" target="_blank" rel="noopener noreferrer" class="modal-link">Comunidad WCA / FMC</a>:</strong>
+                Motor gráfico WebGL para el cubo 3D interactivo y agradecimiento a todos los competidores y documentalistas que comparten técnicas de <em>Fewest Moves</em>.
+              </li>
+            </ul>
+          </div>
+
+          <div class="info-section-card">
+            <h4>Todo lo integrado en esta versión de FMCWorkshop:</h4>
+            <ul class="modal-list">
+              <li><strong>Editor y Reproductor 3D/2D:</strong> Soporte completo de NISS, inserciones (<code>@</code> / <code>*</code>), conmutadores, resaltado de sintaxis, cronómetro de 60 minutos y modos de inspección para <code>EO</code>, <code>DR</code> y <code>HTR</code>.</li>
+              <li><strong>Buscador Automático de EO en 3 Ejes:</strong> Cálculo instantáneo de EOs de hasta 6 movimientos (<code>Normal</code>, <code>Inverse</code> y <code>NISS</code>) con visualización 3D de aristas malas y detección <code>ARM ★</code>.</li>
+              <li><strong>Analizador DR + Finish (Estilo Mallard):</strong> Búsqueda de reducciones a Domino y solución completa desde cualquier EO seleccionado.</li>
+              <li><strong>Solucionador Óptimo (Estilo Nissy):</strong> Búsqueda en segundo plano (<em>Web Worker</em>) de la solución directa más corta para la mezcla actual.</li>
+            </ul>
+          </div>
+
+          <p style="margin-top: 4px; color: #a0a0b0; text-align: center;">¡Disfruta encontrando soluciones cada vez más cortas!</p>
         </div>
       </div>
     </div>
