@@ -39,6 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const highlightSelect = document.getElementById('highlight-select');
   const statusBadge = document.getElementById('status-badge');
   const eoBadge = document.getElementById('eo-badge');
+  let isEoBadgeHidden = false;
+  try {
+    isEoBadgeHidden = (localStorage.getItem('fmc_hide_eo_badge') === 'true');
+  } catch (e) {}
 
   // Modals
   const btnSettings = document.getElementById('btn-settings');
@@ -423,6 +427,10 @@ document.addEventListener('DOMContentLoaded', () => {
       eoBadge.textContent = `EO: F/B (${fbText}) • R/L (${rlText}) • U/D (${udText})`;
       eoBadge.className = (eoFB.isSolved || eoRL.isSolved || eoUD.isSolved) ? 'badge badge-info' : 'badge badge-warn';
       eoBadge.title = 'Orientación en los 3 ejes. Haz clic para alternar el resaltado entre F/B, R/L y U/D.';
+    }
+
+    if (eoBadge && isEoBadgeHidden) {
+      eoBadge.style.display = 'none';
     }
 
     if (currentCube.isSolved()) {
@@ -1147,6 +1155,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Set initial state
   setInverseHidden(isInverseHidden);
+
+  // --- Toggle EO Badge Visibility ---
+  const btnToggleEoBadge = document.getElementById('btn-toggle-eo-badge');
+  const settingShowEoBadge = document.getElementById('setting-show-eo-badge');
+  const eoToggleIcon = document.getElementById('eo-toggle-icon');
+
+  function setEoBadgeHidden(hidden) {
+    isEoBadgeHidden = hidden;
+    try {
+      localStorage.setItem('fmc_hide_eo_badge', isEoBadgeHidden ? 'true' : 'false');
+    } catch (e) {}
+
+    if (eoBadge) {
+      eoBadge.style.display = isEoBadgeHidden ? 'none' : '';
+    }
+    if (settingShowEoBadge) {
+      settingShowEoBadge.checked = !isEoBadgeHidden;
+    }
+    if (eoToggleIcon) {
+      eoToggleIcon.innerHTML = isEoBadgeHidden ? SVG_EYE_SLASH : SVG_EYE_OPEN;
+    }
+    if (btnToggleEoBadge) {
+      btnToggleEoBadge.title = isEoBadgeHidden ? 'Mostrar indicador de EO' : 'Ocultar indicador de EO';
+      btnToggleEoBadge.classList.toggle('active', !isEoBadgeHidden);
+      btnToggleEoBadge.classList.toggle('dimmed', isEoBadgeHidden);
+    }
+  }
+
+  if (btnToggleEoBadge) {
+    btnToggleEoBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setEoBadgeHidden(!isEoBadgeHidden);
+      showToast(isEoBadgeHidden ? 'Indicador de EO ocultado' : 'Indicador de EO visible');
+    });
+  }
+
+  if (settingShowEoBadge) {
+    settingShowEoBadge.addEventListener('change', () => {
+      setEoBadgeHidden(!settingShowEoBadge.checked);
+    });
+  }
+
+  // Set initial state
+  setEoBadgeHidden(isEoBadgeHidden);
 
   // Click on Inverse Scramble box copies it
   inverseScrambleDisplay.addEventListener('click', () => {
