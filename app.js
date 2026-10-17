@@ -389,7 +389,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const eoFB = FMC.checkEO(state, 'FB');
     const eoRL = FMC.checkEO(state, 'RL');
     const eoUD = FMC.checkEO(state, 'UD');
-    const drUD = FMC.checkDR(state, 'FB');
+    const drUD = FMC.checkDR(state, 'UD');
+    const drRL = FMC.checkDR(state, 'RL');
+    const drFB = FMC.checkDR(state, 'FB');
 
     // Update EO badge based on active highlight mode, or display all 3 axes in Full mode
     if (mode === 'EO_RL') {
@@ -439,11 +441,16 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (isCurrentStateNiss) {
       statusBadge.innerHTML = '<span class="eo-badge-full">NISS (Inverse)</span><span class="eo-badge-compact">NISS</span>';
       statusBadge.className = 'badge badge-niss';
-    } else if (drUD.isDR) {
-      statusBadge.innerHTML = '<span class="eo-badge-full">DR Solved!</span><span class="eo-badge-compact">DR ✓</span>';
+    } else if (drUD.isDR || drRL.isDR || drFB.isDR) {
+      const solvedAxes = [];
+      if (drUD.isDR) solvedAxes.push('U/D');
+      if (drRL.isDR) solvedAxes.push('R/L');
+      if (drFB.isDR) solvedAxes.push('F/B');
+      statusBadge.innerHTML = `<span class="eo-badge-full">DR (${solvedAxes.join(', ')}) Solved!</span><span class="eo-badge-compact">DR ✓</span>`;
       statusBadge.className = 'badge badge-info';
-    } else if (mode.startsWith('DR')) {
-      statusBadge.innerHTML = `<span class="eo-badge-full">DR: C ${drUD.cornersOriented}/8, E ${drUD.eSliceEdgesInSlice}/4</span><span class="eo-badge-compact">C:${drUD.cornersOriented} E:${drUD.eSliceEdgesInSlice}</span>`;
+    } else if (mode.startsWith('DR_')) {
+      const activeDr = (mode === 'DR_RL') ? drRL : ((mode === 'DR_FB') ? drFB : drUD);
+      statusBadge.innerHTML = `<span class="eo-badge-full">DR: C ${activeDr.cornersOriented}/8, E ${activeDr.sliceEdgesInSlice}/4</span><span class="eo-badge-compact">C:${activeDr.cornersOriented} E:${activeDr.sliceEdgesInSlice}</span>`;
       statusBadge.className = 'badge badge-warn';
     } else {
       statusBadge.textContent = '3x3';
@@ -500,19 +507,20 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           isDimmed = true;
         }
-      } else if (mode === 'DR_UD') {
+      } else if (mode.startsWith('DR_')) {
+        const drObj = (mode === 'DR_RL') ? drRL : ((mode === 'DR_FB') ? drFB : drUD);
         if (edge) {
-          if (drUD.badEdges.some(be => be.name === edge.name)) {
+          if (drObj.badEdges.some(be => be.name === edge.name)) {
             hex = HIGHLIGHT_BAD_COLOR;
-          } else if (drUD.isDR) {
+          } else if (drObj.isDR) {
             hex = HIGHLIGHT_GOOD_COLOR;
           } else {
             isDimmed = true;
           }
         } else if (corner) {
-          if (drUD.badCorners.some(bc => bc.name === corner.name)) {
+          if (drObj.badCorners.some(bc => bc.name === corner.name)) {
             hex = HIGHLIGHT_BAD_COLOR;
-          } else if (drUD.isDR) {
+          } else if (drObj.isDR) {
             hex = HIGHLIGHT_GOOD_COLOR;
           } else {
             isDimmed = true;

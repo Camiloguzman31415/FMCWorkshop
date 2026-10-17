@@ -790,63 +790,78 @@
     };
   }
 
-  // Check Domino Reduction (DR on U/D)
-  // In DR on U/D:
-  // 1. All 12 edges have EO satisfied (on F/B or R/L)
-  // 2. All 8 corners have U/D colors on U or D facelets
-  // 3. E-slice edges (FR, FL, BR, BL) are in the E-slice
-  function checkDR(cubeState, eoAxis = 'FB') {
-    const eoResult = checkEO(cubeState, eoAxis);
+  // Check Domino Reduction (DR on U/D, R/L, or F/B)
+  function checkDR(cubeState, drAxis = 'UD') {
+    let axisColors, cornerKey, slicePositions, eoAxes;
+    if (drAxis === 'RL') {
+      // Subgroup <R, L, U2, D2, F2, B2>
+      axisColors = [cubeState[13], cubeState[40]];
+      cornerKey = 'fLR';
+      slicePositions = ['UB', 'UF', 'DB', 'DF']; // M-slice
+      eoAxes = ['FB', 'UD'];
+    } else if (drAxis === 'FB') {
+      // Subgroup <F, B, U2, D2, R2, L2>
+      axisColors = [cubeState[22], cubeState[49]];
+      cornerKey = 'fFB';
+      slicePositions = ['UR', 'UL', 'DR', 'DL']; // S-slice
+      eoAxes = ['UD', 'RL'];
+    } else {
+      // Default: Subgroup <U, D, R2, L2, F2, B2>
+      axisColors = [cubeState[4], cubeState[31]];
+      cornerKey = 'fU';
+      slicePositions = ['FR', 'FL', 'BR', 'BL']; // E-slice
+      eoAxes = ['FB', 'RL'];
+    }
 
-    const uColor = cubeState[4];
-    const dColor = cubeState[31];
+    // EO check on orthogonal axes (taking the best / closest EO)
+    const eo1 = checkEO(cubeState, eoAxes[0]);
+    const eo2 = checkEO(cubeState, eoAxes[1]);
+    const eoResult = (eo1.badCount <= eo2.badCount) ? eo1 : eo2;
 
-    // Check corner orientation to U/D
+    // Check corner orientation on drAxis
     let orientedCornersCount = 0;
     const badCorners = [];
     CORNERS.forEach(c => {
-      const cu = cubeState[c.fU];
-      if (cu === uColor || cu === dColor) {
+      const col = cubeState[c[cornerKey]];
+      if (axisColors.includes(col)) {
         orientedCornersCount++;
       } else {
         badCorners.push(c);
       }
     });
 
-    // Check E-slice edges: pieces with no U or D color
-    // Should be in E-slice positions: FR, FL, BR, BL
-    let eSliceCorrect = 0;
+    // Check slice edges: pieces with NO axisColors
+    let sliceCorrect = 0;
     const badEdges = [...eoResult.badEdges];
-    const eSlicePositions = ['FR', 'FL', 'BR', 'BL'];
     EDGES.forEach(e => {
       const c1 = cubeState[e.f1];
       const c2 = cubeState[e.f2];
-      const hasUD = (c1 === uColor || c1 === dColor || c2 === uColor || c2 === dColor);
-      const isEposition = eSlicePositions.includes(e.name);
-      if (!hasUD) {
-        // This is an E-slice piece. Is it in an E-slice position?
-        if (isEposition) {
-          eSliceCorrect++;
+      const hasAxisColor = axisColors.includes(c1) || axisColors.includes(c2);
+      const isInSlicePos = slicePositions.includes(e.name);
+      if (!hasAxisColor) {
+        if (isInSlicePos) {
+          sliceCorrect++;
         } else {
           if (!badEdges.some(be => be.name === e.name)) badEdges.push(e);
         }
       } else {
-        // U/D edge in E-slice position is misplaced
-        if (isEposition) {
+        if (isInSlicePos) {
           if (!badEdges.some(be => be.name === e.name)) badEdges.push(e);
         }
       }
     });
 
-    const isDR = (eoResult.isSolved && orientedCornersCount === 8 && eSliceCorrect === 4);
+    const isDR = (eoResult.isSolved && orientedCornersCount === 8 && sliceCorrect === 4);
 
     return {
       isDR,
+      drAxis,
       eoResult,
       cornersOriented: orientedCornersCount,
       badCorners,
       badEdges,
-      eSliceEdgesInSlice: eSliceCorrect
+      sliceEdgesInSlice: sliceCorrect,
+      eSliceEdgesInSlice: sliceCorrect // backwards compat
     };
   }
 
