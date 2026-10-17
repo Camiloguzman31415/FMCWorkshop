@@ -1,5 +1,5 @@
 // Service Worker para FMC Workshop - Soporte PWA y Modo Offline
-const CACHE_NAME = 'fmc-workshop-v1.4';
+const CACHE_NAME = 'fmc-workshop-v1.5';
 
 const STATIC_ASSETS = [
   './',
