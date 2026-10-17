@@ -394,28 +394,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update EO badge based on active highlight mode, or display all 3 axes in Full mode
     if (mode === 'EO_RL') {
       if (eoRL.isSolved) {
-        eoBadge.textContent = 'EO (R/L): Solved (0 bad)';
+        eoBadge.innerHTML = '<span class="eo-badge-full">EO (R/L): Solved (0 bad)</span><span class="eo-badge-compact">RL: 0✓</span>';
         eoBadge.className = 'badge badge-info';
       } else {
-        eoBadge.textContent = `EO (R/L): ${eoRL.badCount} Bad Edges`;
+        eoBadge.innerHTML = `<span class="eo-badge-full">EO (R/L): ${eoRL.badCount} Bad Edges</span><span class="eo-badge-compact">RL: ${eoRL.badCount} bad</span>`;
         eoBadge.className = 'badge badge-warn';
       }
       eoBadge.title = 'Eje R/L activo. Haz clic para cambiar de eje.';
     } else if (mode === 'EO_UD') {
       if (eoUD.isSolved) {
-        eoBadge.textContent = 'EO (U/D): Solved (0 bad)';
+        eoBadge.innerHTML = '<span class="eo-badge-full">EO (U/D): Solved (0 bad)</span><span class="eo-badge-compact">UD: 0✓</span>';
         eoBadge.className = 'badge badge-info';
       } else {
-        eoBadge.textContent = `EO (U/D): ${eoUD.badCount} Bad Edges`;
+        eoBadge.innerHTML = `<span class="eo-badge-full">EO (U/D): ${eoUD.badCount} Bad Edges</span><span class="eo-badge-compact">UD: ${eoUD.badCount} bad</span>`;
         eoBadge.className = 'badge badge-warn';
       }
       eoBadge.title = 'Eje U/D activo. Haz clic para cambiar de eje.';
     } else if (mode === 'EO_FB') {
       if (eoFB.isSolved) {
-        eoBadge.textContent = 'EO (F/B): Solved (0 bad)';
+        eoBadge.innerHTML = '<span class="eo-badge-full">EO (F/B): Solved (0 bad)</span><span class="eo-badge-compact">FB: 0✓</span>';
         eoBadge.className = 'badge badge-info';
       } else {
-        eoBadge.textContent = `EO (F/B): ${eoFB.badCount} Bad Edges`;
+        eoBadge.innerHTML = `<span class="eo-badge-full">EO (F/B): ${eoFB.badCount} Bad Edges</span><span class="eo-badge-compact">FB: ${eoFB.badCount} bad</span>`;
         eoBadge.className = 'badge badge-warn';
       }
       eoBadge.title = 'Eje F/B activo. Haz clic para cambiar de eje.';
@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const fbText = eoFB.isSolved ? '0✓' : `${eoFB.badCount}`;
       const rlText = eoRL.isSolved ? '0✓' : `${eoRL.badCount}`;
       const udText = eoUD.isSolved ? '0✓' : `${eoUD.badCount}`;
-      eoBadge.textContent = `EO: F/B (${fbText}) • R/L (${rlText}) • U/D (${udText})`;
+      eoBadge.innerHTML = `<span class="eo-badge-full">EO: F/B (${fbText}) • R/L (${rlText}) • U/D (${udText})</span><span class="eo-badge-compact">FB:${fbText} · RL:${rlText} · UD:${udText}</span>`;
       eoBadge.className = (eoFB.isSolved || eoRL.isSolved || eoUD.isSolved) ? 'badge badge-info' : 'badge badge-warn';
       eoBadge.title = 'Orientación en los 3 ejes. Haz clic para alternar el resaltado entre F/B, R/L y U/D.';
     }
@@ -437,13 +437,13 @@ document.addEventListener('DOMContentLoaded', () => {
       statusBadge.textContent = 'Solved!';
       statusBadge.className = 'badge badge-info';
     } else if (isCurrentStateNiss) {
-      statusBadge.textContent = 'NISS (Inverse)';
+      statusBadge.innerHTML = '<span class="eo-badge-full">NISS (Inverse)</span><span class="eo-badge-compact">NISS</span>';
       statusBadge.className = 'badge badge-niss';
     } else if (drUD.isDR) {
-      statusBadge.textContent = 'DR Solved!';
+      statusBadge.innerHTML = '<span class="eo-badge-full">DR Solved!</span><span class="eo-badge-compact">DR ✓</span>';
       statusBadge.className = 'badge badge-info';
     } else if (mode.startsWith('DR')) {
-      statusBadge.textContent = `DR: C ${drUD.cornersOriented}/8, E ${drUD.eSliceEdgesInSlice}/4`;
+      statusBadge.innerHTML = `<span class="eo-badge-full">DR: C ${drUD.cornersOriented}/8, E ${drUD.eSliceEdgesInSlice}/4</span><span class="eo-badge-compact">C:${drUD.cornersOriented} E:${drUD.eSliceEdgesInSlice}</span>`;
       statusBadge.className = 'badge badge-warn';
     } else {
       statusBadge.textContent = '3x3';

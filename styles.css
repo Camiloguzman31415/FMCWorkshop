@@ -371,6 +371,15 @@ html, body {
   pointer-events: auto;
 }
 
+/* EO & Status Badge text responsiveness (Full on desktop, compact on mobile) */
+.eo-badge-full {
+  display: inline;
+}
+
+.eo-badge-compact {
+  display: none;
+}
+
 #eo-badge {
   cursor: pointer;
 }
@@ -2426,32 +2435,39 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
     left: auto !important;
     right: auto !important;
     display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    padding: 8px 10px !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    padding: 6px 8px !important;
     background-color: #17181d !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
     pointer-events: auto !important;
     z-index: 5 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .viewport-top-controls {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 6px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    flex-wrap: wrap !important;
+    gap: 4px !important;
+    width: auto !important;
+    max-width: none !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
   }
 
   .status-badge-container {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    width: 100% !important;
-    gap: 6px !important;
+    justify-content: flex-end !important;
+    width: auto !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
   }
 
   .canvas-container {
@@ -2465,22 +2481,33 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
     height: 30px !important;
     min-height: 30px !important;
     max-height: 30px !important;
-    padding: 0 9px !important;
-    font-size: 12px !important;
+    padding: 0 7px !important;
+    font-size: 11.5px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
   }
 
-  .ctrl-btn span {
-    white-space: nowrap !important;
+  .ctrl-btn#btn-settings span,
+  .ctrl-btn#btn-reset-view span {
+    display: none !important;
+  }
+
+  .ctrl-btn#btn-settings,
+  .ctrl-btn#btn-reset-view {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    padding: 0 !important;
+    justify-content: center !important;
   }
 
   .highlight-box {
     height: 30px !important;
     min-height: 30px !important;
     max-height: 30px !important;
-    padding: 0 6px !important;
+    padding: 0 5px !important;
+    gap: 3px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
@@ -2491,8 +2518,8 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   }
 
   .highlight-select {
-    font-size: 11.5px !important;
-    padding: 0 4px !important;
+    font-size: 11px !important;
+    padding: 0 2px !important;
     height: 100% !important;
     white-space: nowrap !important;
   }
@@ -2501,11 +2528,24 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
     height: 26px !important;
     min-height: 26px !important;
     max-height: 26px !important;
-    padding: 0 8px !important;
-    font-size: 11px !important;
+    padding: 0 6px !important;
+    font-size: 10.5px !important;
+    letter-spacing: 0.2px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
+  }
+
+  #status-badge {
+    padding: 0 5px !important;
+  }
+
+  .eo-badge-full {
+    display: none !important;
+  }
+
+  .eo-badge-compact {
+    display: inline !important;
   }
 
   /* Playback Bar */
@@ -2697,27 +2737,25 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
     height: 30px !important;
     min-height: 30px !important;
     max-height: 30px !important;
-    padding: 0 8px !important;
-    font-size: 11.5px !important;
+    padding: 0 6px !important;
+    font-size: 11px !important;
   }
 
-  .ctrl-btn#btn-reset-view span {
+  .ctrl-btn#btn-reset-view span,
+  .ctrl-btn#btn-settings span {
     display: none !important;
   }
 
-  .ctrl-btn#btn-reset-view {
-    height: 30px !important;
-    min-height: 30px !important;
-    max-height: 30px !important;
-    padding: 0 8px !important;
-  }
-
+  .ctrl-btn#btn-reset-view,
   .ctrl-btn#btn-settings {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
     height: 30px !important;
     min-height: 30px !important;
     max-height: 30px !important;
-    padding: 0 8px !important;
-    font-size: 11.5px !important;
+    padding: 0 !important;
+    justify-content: center !important;
   }
 
   .canvas-hint {
