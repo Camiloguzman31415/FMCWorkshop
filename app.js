@@ -2354,6 +2354,131 @@ B2 L2 D2 F2//M slice (4/20)
     renderEOSolutionsList();
   }
 
+  const EO_BATCH_SIZE = 150;
+  let currentFilteredEOs = [];
+  let currentEORenderCount = 0;
+  let eoLoadMoreContainer = null;
+
+  function createEOSolRow(sol, idx) {
+    const row = document.createElement('div');
+    row.className = 'eo-sol-row';
+
+    const axisBadgeCls = `axis-${sol.axis.toLowerCase()}`;
+    const drStatsHtml = (sol.drStats || []).map(st => {
+      const rzpCls = st.isRzp ? 'eo-rzp-tag ready' : 'eo-rzp-tag';
+      const starHtml = st.isArm ? '<span class="eo-arm-star" title="Cerca de DR / ARM Ready">★</span>' : '';
+      return `
+        <div class="eo-dr-stat-line">
+          <span>${st.axis}: <span class="${rzpCls}">${st.c}c${st.e}e</span> | ${st.armC}c${st.armE}e ${starHtml}</span>
+          <span class="eo-pairs-count" title="Pares esquina-arista formados">${st.pairs}</span>
+        </div>
+      `;
+    }).join('');
+
+    row.innerHTML = `
+      <div class="eo-sol-left">
+        <span class="eo-sol-idx">${idx + 1}.</span>
+        <span class="eo-sol-alg" title="Haz clic para cargar este EO en el editor y verlo en el cubo 3D">${escapeHtml(sol.notation)}</span>
+        <span class="eo-sol-len-badge len-${sol.length}">${sol.length}</span>
+        <span class="eo-sol-axis-badge ${axisBadgeCls}">${sol.axis}</span>
+      </div>
+      <div class="eo-sol-right">
+        <div class="eo-dr-stats-col">
+          ${drStatsHtml}
+        </div>
+        <button type="button" class="eo-dr-btn" title="Analizar mejores DRs y solves desde este EO (Estilo Mallard)">DR</button>
+      </div>
+    `;
+
+    // Click on EO notation -> load into main editor & highlight that EO axis
+    const algEl = row.querySelector('.eo-sol-alg');
+    if (algEl) {
+      algEl.addEventListener('click', () => {
+        movesInput.value = `${sol.notation} // EO-${sol.axis} (${sol.length}/${sol.length})`;
+        if (highlightSelect) {
+          highlightSelect.value = `EO_${sol.axis}`;
+        }
+        updateSolution();
+        setStep(parsedSolution.finalMoves.length);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showToast(`EO cargado en el editor: ${sol.notation} (${sol.axis})`);
+      });
+    }
+
+    // Click on DR button -> load into Mallard analyzer and run immediately
+    const drBtn = row.querySelector('.eo-dr-btn');
+    if (drBtn) {
+      drBtn.addEventListener('click', () => {
+        // Ensure Mallard section body is expanded if it was collapsed
+        const mallardBody = document.getElementById('mallard-analyzer-body');
+        if (mallardBody && mallardBody.style.display === 'none') {
+          mallardBody.style.display = '';
+          const collapseBtn = document.querySelector('.block-collapse-btn[data-target="mallard-analyzer-body"] span');
+          if (collapseBtn) collapseBtn.textContent = 'Ocultar';
+        }
+        if (mallardEoInput) {
+          mallardEoInput.value = sol.notation;
+        }
+        if (mallardSection) {
+          mallardSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        runMallardAnalysis(sol.notation);
+      });
+    }
+
+    return row;
+  }
+
+  function appendEORows(count) {
+    if (!eoSolutionsList || !currentFilteredEOs.length) return;
+
+    if (eoLoadMoreContainer && eoLoadMoreContainer.parentNode) {
+      eoLoadMoreContainer.parentNode.removeChild(eoLoadMoreContainer);
+    }
+
+    const start = currentEORenderCount;
+    const end = Math.min(start + count, currentFilteredEOs.length);
+    if (start >= end) return;
+
+    const frag = document.createDocumentFragment();
+    for (let i = start; i < end; i++) {
+      frag.appendChild(createEOSolRow(currentFilteredEOs[i], i));
+    }
+    eoSolutionsList.appendChild(frag);
+    currentEORenderCount = end;
+
+    if (currentEORenderCount < currentFilteredEOs.length) {
+      if (!eoLoadMoreContainer) {
+        eoLoadMoreContainer = document.createElement('div');
+        eoLoadMoreContainer.className = 'eo-load-more-container';
+      }
+      const remaining = currentFilteredEOs.length - currentEORenderCount;
+      const nextBatch = Math.min(EO_BATCH_SIZE, remaining);
+      eoLoadMoreContainer.innerHTML = `
+        <button type="button" class="eo-load-more-btn">⬇ Cargar más (+${nextBatch}) • Mostrando ${currentEORenderCount} de ${currentFilteredEOs.length}</button>
+        <button type="button" class="eo-load-all-btn">Mostrar todas (${currentFilteredEOs.length})</button>
+      `;
+
+      const loadMoreBtn = eoLoadMoreContainer.querySelector('.eo-load-more-btn');
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          appendEORows(EO_BATCH_SIZE);
+        });
+      }
+
+      const loadAllBtn = eoLoadMoreContainer.querySelector('.eo-load-all-btn');
+      if (loadAllBtn) {
+        loadAllBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          appendEORows(currentFilteredEOs.length - currentEORenderCount);
+        });
+      }
+
+      eoSolutionsList.appendChild(eoLoadMoreContainer);
+    }
+  }
+
   function renderEOSolutionsList() {
     if (!eoSolutionsList || !currentEOData) return;
 
@@ -2361,7 +2486,7 @@ B2 L2 D2 F2//M slice (4/20)
     const axisVal = eoFilterAxis ? eoFilterAxis.value : 'all';
     const rzpVal = eoFilterRzp ? eoFilterRzp.value : 'all';
 
-    const filtered = currentEOData.solutions.filter(sol => {
+    currentFilteredEOs = currentEOData.solutions.filter(sol => {
       if (activeMoveFilter !== 'all' && sol.length !== parseInt(activeMoveFilter, 10)) return false;
       if (typeVal !== 'all' && sol.type !== typeVal) return false;
       if (axisVal !== 'all' && sol.axis !== axisVal) return false;
@@ -2371,87 +2496,18 @@ B2 L2 D2 F2//M slice (4/20)
     });
 
     if (eoSolutionsListTitle) {
-      eoSolutionsListTitle.textContent = `Soluciones EO (${filtered.length})`;
+      eoSolutionsListTitle.textContent = `Soluciones EO (${currentFilteredEOs.length})`;
     }
 
     eoSolutionsList.innerHTML = '';
+    currentEORenderCount = 0;
 
-    if (filtered.length === 0) {
+    if (currentFilteredEOs.length === 0) {
       eoSolutionsList.innerHTML = `<div style="padding: 18px; text-align: center; color: #9a9ca8; font-size: 13px;">No hay soluciones EO que coincidan con los filtros seleccionados.</div>`;
       return;
     }
 
-    // Render up to 150 rows for smooth DOM performance
-    const slice = filtered.slice(0, 150);
-    slice.forEach((sol, idx) => {
-      const row = document.createElement('div');
-      row.className = 'eo-sol-row';
-
-      const axisBadgeCls = `axis-${sol.axis.toLowerCase()}`;
-      const drStatsHtml = (sol.drStats || []).map(st => {
-        const rzpCls = st.isRzp ? 'eo-rzp-tag ready' : 'eo-rzp-tag';
-        const starHtml = st.isArm ? '<span class="eo-arm-star" title="Cerca de DR / ARM Ready">★</span>' : '';
-        return `
-          <div class="eo-dr-stat-line">
-            <span>${st.axis}: <span class="${rzpCls}">${st.c}c${st.e}e</span> | ${st.armC}c${st.armE}e ${starHtml}</span>
-            <span class="eo-pairs-count" title="Pares esquina-arista formados">${st.pairs}</span>
-          </div>
-        `;
-      }).join('');
-
-      row.innerHTML = `
-        <div class="eo-sol-left">
-          <span class="eo-sol-idx">${idx + 1}.</span>
-          <span class="eo-sol-alg" title="Haz clic para cargar este EO en el editor y verlo en el cubo 3D">${escapeHtml(sol.notation)}</span>
-          <span class="eo-sol-len-badge len-${sol.length}">${sol.length}</span>
-          <span class="eo-sol-axis-badge ${axisBadgeCls}">${sol.axis}</span>
-        </div>
-        <div class="eo-sol-right">
-          <div class="eo-dr-stats-col">
-            ${drStatsHtml}
-          </div>
-          <button type="button" class="eo-dr-btn" title="Analizar mejores DRs y solves desde este EO (Estilo Mallard)">DR</button>
-        </div>
-      `;
-
-      // Click on EO notation -> load into main editor & highlight that EO axis
-      const algEl = row.querySelector('.eo-sol-alg');
-      if (algEl) {
-        algEl.addEventListener('click', () => {
-          movesInput.value = `${sol.notation} // EO-${sol.axis} (${sol.length}/${sol.length})`;
-          if (highlightSelect) {
-            highlightSelect.value = `EO_${sol.axis}`;
-          }
-          updateSolution();
-          setStep(parsedSolution.finalMoves.length);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          showToast(`EO cargado en el editor: ${sol.notation} (${sol.axis})`);
-        });
-      }
-
-      // Click on DR button -> load into Mallard analyzer and run immediately
-      const drBtn = row.querySelector('.eo-dr-btn');
-      if (drBtn) {
-        drBtn.addEventListener('click', () => {
-          // Ensure Mallard section body is expanded if it was collapsed
-          const mallardBody = document.getElementById('mallard-analyzer-body');
-          if (mallardBody && mallardBody.style.display === 'none') {
-            mallardBody.style.display = '';
-            const collapseBtn = document.querySelector('.block-collapse-btn[data-target="mallard-analyzer-body"] span');
-            if (collapseBtn) collapseBtn.textContent = 'Ocultar';
-          }
-          if (mallardEoInput) {
-            mallardEoInput.value = sol.notation;
-          }
-          if (mallardSection) {
-            mallardSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-          runMallardAnalysis(sol.notation);
-        });
-      }
-
-      eoSolutionsList.appendChild(row);
-    });
+    appendEORows(EO_BATCH_SIZE);
   }
 
   // Collapsible Master Analysis Suite & Individual Section Toggles
@@ -2539,6 +2595,16 @@ B2 L2 D2 F2//M slice (4/20)
   if (eoFilterType) eoFilterType.addEventListener('change', renderEOSolutionsList);
   if (eoFilterAxis) eoFilterAxis.addEventListener('change', renderEOSolutionsList);
   if (eoFilterRzp) eoFilterRzp.addEventListener('change', renderEOSolutionsList);
+
+  if (eoSolutionsList) {
+    eoSolutionsList.addEventListener('scroll', () => {
+      if (currentFilteredEOs && currentEORenderCount < currentFilteredEOs.length) {
+        if (eoSolutionsList.scrollTop + eoSolutionsList.clientHeight >= eoSolutionsList.scrollHeight - 200) {
+          appendEORows(EO_BATCH_SIZE);
+        }
+      }
+    });
+  }
 
   // --- 2. Mallard DR & Finish Analyzer Logic ---
   let currentMallardData = null;

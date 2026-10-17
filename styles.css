@@ -1970,6 +1970,52 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   padding-right: 4px;
 }
 
+.eo-load-more-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px 6px;
+  margin-top: 4px;
+}
+
+.eo-load-more-btn {
+  background: #252836;
+  border: 1px solid #3d4256;
+  color: #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.eo-load-more-btn:hover {
+  background: #2e3346;
+  border-color: #60a5fa;
+  color: #ffffff;
+}
+
+.eo-load-all-btn {
+  background: transparent;
+  border: 1px solid #3d4256;
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.eo-load-all-btn:hover {
+  background: #222530;
+  border-color: #64748b;
+  color: #f1f5f9;
+}
+
 .eo-sol-row {
   background-color: #23242c;
   border: 1px solid #323440;
