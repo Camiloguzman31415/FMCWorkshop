@@ -91,8 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const defaultCameraPos = new THREE.Vector3(4.45, 3.88, 5.38);
   camera.position.copy(defaultCameraPos);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-  renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance'
+  });
+  renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight, false);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -140,20 +145,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Resize handler
-  function onResize() {
-    if (!canvasContainer) return;
+  // Dimension caching & flicker-free resize handling
+  let lastCanvasWidth = canvasContainer ? canvasContainer.clientWidth : 0;
+  let lastCanvasHeight = canvasContainer ? canvasContainer.clientHeight : 0;
+  let lastCanvasDpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function onCanvasResize() {
+    if (!canvasContainer || !renderer || !camera) return;
     const width = canvasContainer.clientWidth;
     const height = canvasContainer.clientHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    if (width <= 0 || height <= 0) return;
+
+    // Avoid clearing the WebGL backbuffer if size and pixel ratio haven't changed
+    if (width === lastCanvasWidth && height === lastCanvasHeight && dpr === lastCanvasDpr) {
+      return;
+    }
+
+    lastCanvasWidth = width;
+    lastCanvasHeight = height;
+    lastCanvasDpr = dpr;
+
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(width, height, false);
+    // Synchronously render immediately so the canvas buffer is NEVER empty/blank on resize
+    renderer.render(scene, camera);
+  }
+
+  function onWindowResize() {
+    onCanvasResize();
     autoResizeScramble();
     autoResizeMoves();
   }
-  window.addEventListener('resize', onResize);
+
+  window.addEventListener('resize', onWindowResize);
   if (typeof ResizeObserver !== 'undefined' && canvasContainer) {
-    const ro = new ResizeObserver(() => onResize());
+    const ro = new ResizeObserver(() => onCanvasResize());
     ro.observe(canvasContainer);
   }
 
@@ -2382,6 +2412,9 @@ B2 L2 D2 F2//M slice (4/20)
     try {
       localStorage.setItem('fmc_hide_analysis_suite', collapsed ? 'true' : 'false');
     } catch (e) {}
+    if (typeof onCanvasResize === 'function') {
+      onCanvasResize();
+    }
   }
 
   if (btnToggleAnalysisSuite) {
