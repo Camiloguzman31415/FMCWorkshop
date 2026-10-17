@@ -1,5 +1,9 @@
 # FMCWorkshop 🧩
 
+[![GitHub Pages](https://img.shields.io/badge/Demo%20en%20Vivo-GitHub%20Pages-brightgreen?style=flat-square&logo=github)](https://camiloguzman31415.github.io/FMCWorkshop/)
+
+> 🌐 **Pruébalo en vivo sin instalar nada:** [**https://camiloguzman31415.github.io/FMCWorkshop/**](https://camiloguzman31415.github.io/FMCWorkshop/)
+
 Herramienta interactiva y visualizador 3D para el aprendizaje, entrenamiento y análisis avanzado de **Fewest Moves (FMC)** en el Cubo de Rubik 3x3.
 
 Inspirado en flujos de trabajo profesionales como *333.fm*, *Insertion Finder* y *Nissy*.
