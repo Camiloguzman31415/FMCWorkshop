@@ -83,6 +83,8 @@ html, body {
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Top Header */
@@ -192,20 +194,6 @@ html, body {
   width: 100%;
   box-sizing: border-box;
   align-items: start;
-}
-
-@media (max-width: 900px) {
-  .main-content {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 12px;
-  }
-
-  .left-pane {
-    height: 460px;
-    min-height: 400px;
-    position: static;
-  }
 }
 
 /* Left Column: Cube Viewport & Player */
@@ -2297,5 +2285,397 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN SYSTEM (Tablets, Mobile & Compact Devices)
+   ============================================================================ */
+
+/* 1. Tablets & Medium Screens (max-width: 992px) */
+@media (max-width: 992px) {
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 14px;
+    max-width: 100%;
+  }
+
+  .left-pane {
+    position: relative !important;
+    top: 0 !important;
+    height: 420px;
+    min-height: 360px;
+    width: 100%;
+  }
+
+  .right-pane {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .eo-trainer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 2. Mobile Landscape & Standard Smartphones (max-width: 768px) */
+@media (max-width: 768px) {
+  /* Header */
+  .top-header {
+    padding: 0 12px;
+    height: 50px;
+  }
+
+  .brand-name {
+    font-size: 17px;
+  }
+
+  .brand-section {
+    gap: 8px;
+  }
+
+  .logo-cube {
+    width: 32px;
+    height: 32px;
+  }
+
+  .header-actions {
+    gap: 6px;
+  }
+
+  .header-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  /* Main Layout */
+  .main-content {
+    padding: 10px 10px;
+    gap: 14px;
+  }
+
+  .left-pane {
+    height: 370px;
+    min-height: 310px;
+  }
+
+  /* Viewport Controls on Canvas */
+  .viewport-top-controls {
+    top: 8px;
+    left: 8px;
+    gap: 6px;
+    max-width: calc(100% - 130px);
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    padding: 5px 9px;
+    font-size: 12px;
+  }
+
+  .highlight-box {
+    padding: 3px 6px;
+  }
+
+  .highlight-label {
+    display: none;
+  }
+
+  .highlight-select {
+    font-size: 11.5px;
+    padding: 2px 4px;
+  }
+
+  .status-badge-container {
+    top: 8px;
+    right: 8px;
+    gap: 4px;
+  }
+
+  .badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  /* Playback Bar */
+  .playback-bar {
+    padding: 6px 10px 8px 10px;
+  }
+
+  .player-buttons {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .player-btn {
+    flex: 1;
+    width: auto;
+    min-width: 44px;
+    height: 40px;
+  }
+
+  .player-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Action Buttons & Timer Layout (Eliminates horizontal screen overflow) */
+  .action-buttons-container {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .timer-widget {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    justify-content: center;
+    gap: 18px;
+    padding: 8px 14px;
+    min-height: 52px;
+  }
+
+  .timer-display {
+    font-size: 26px;
+  }
+
+  .action-buttons-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .action-tile {
+    min-width: 0;
+    width: 100%;
+    flex: 1 1 auto;
+    padding: 8px 4px;
+    min-height: 56px;
+  }
+
+  .action-tile svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .action-tile span {
+    font-size: 10.5px;
+  }
+
+  /* Analysis Suite */
+  .fmc-analysis-suite {
+    padding: 8px 10px 36px;
+    gap: 12px;
+  }
+
+  .analysis-suite-toggle-bar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .analysis-suite-toggle-title {
+    font-size: 13.5px;
+    line-height: 1.3;
+  }
+
+  .analysis-suite-toggle-btn {
+    padding: 5px 10px;
+    font-size: 11.5px;
+    flex-shrink: 0;
+  }
+
+  .analysis-block {
+    padding: 14px 10px;
+    gap: 12px;
+  }
+
+  .eo-axes-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .mallard-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .mallard-eo-input-wrap {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .mallard-filters {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .mallard-results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mallard-card {
+    padding: 12px 10px;
+  }
+
+  .optimal-sol-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .optimal-sol-left {
+    min-width: 0;
+    width: 100%;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .optimal-sol-alg {
+    font-size: 16px;
+  }
+
+  .optimal-sol-actions {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
+
+/* 3. Compact Mobile Devices (max-width: 480px) */
+@media (max-width: 480px) {
+  /* Header: icon-only buttons to guarantee no text wrapping or overflow */
+  .top-header {
+    padding: 0 10px;
+  }
+
+  .brand-name {
+    font-size: 15px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .header-btn span {
+    display: none;
+  }
+
+  .header-btn {
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  .header-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Viewport Controls */
+  .left-pane {
+    height: 330px;
+    min-height: 270px;
+  }
+
+  .ctrl-btn#btn-reset-view span {
+    display: none;
+  }
+
+  .ctrl-btn#btn-reset-view {
+    padding: 5px 7px;
+  }
+
+  .ctrl-btn#btn-settings {
+    padding: 5px 8px;
+    font-size: 11.5px;
+  }
+
+  .canvas-hint {
+    display: none;
+  }
+
+  /* Action Buttons Grid */
+  .action-buttons-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .action-tile {
+    padding: 6px 3px;
+    min-height: 52px;
+  }
+
+  .action-tile svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .action-tile span {
+    font-size: 10px;
+  }
+
+  .timer-widget {
+    min-height: 48px;
+    padding: 6px 12px;
+    gap: 12px;
+  }
+
+  .timer-display {
+    font-size: 24px;
+  }
+
+  .timer-btn {
+    padding: 5px 9px;
+    font-size: 11.5px;
+  }
+
+  /* Notation Inputs & Displays */
+  .fmc-textarea {
+    padding: 8px 10px;
+    font-size: 18px;
+    min-height: 75px;
+  }
+
+  .fmc-content-display {
+    padding: 8px 10px;
+    font-size: 17px;
+  }
+
+  .banner-top {
+    padding: 6px 10px;
+  }
+
+  .banner-label {
+    font-size: 11px;
+  }
+
+  .banner-metric {
+    font-size: 12px;
+  }
+
+  .title-input {
+    font-size: 14.5px;
+  }
+
+  /* Modals */
+  .modal-card {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 12px 14px;
+  }
+
+  .modal-body {
+    padding: 14px 12px;
+  }
 }
 
