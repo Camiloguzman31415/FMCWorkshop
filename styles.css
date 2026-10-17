@@ -1914,6 +1914,28 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   color: #ffffff;
 }
 
+/* Color coding for move filter pills */
+.eo-pill-btn[data-move="1"] { color: #4ade80; border-color: rgba(34, 197, 94, 0.4); }
+.eo-pill-btn[data-move="2"] { color: #38bdf8; border-color: rgba(14, 165, 233, 0.4); }
+.eo-pill-btn[data-move="3"] { color: #818cf8; border-color: rgba(99, 102, 241, 0.4); }
+.eo-pill-btn[data-move="4"] { color: #c084fc; border-color: rgba(168, 85, 247, 0.4); }
+.eo-pill-btn[data-move="5"] { color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); }
+.eo-pill-btn[data-move="6"] { color: #fb7185; border-color: rgba(244, 63, 94, 0.4); }
+
+.eo-pill-btn[data-move="1"].active { background-color: #166534; border-color: #22c55e; color: #ffffff; }
+.eo-pill-btn[data-move="2"].active { background-color: #075985; border-color: #0ea5e9; color: #ffffff; }
+.eo-pill-btn[data-move="3"].active { background-color: #3730a3; border-color: #6366f1; color: #ffffff; }
+.eo-pill-btn[data-move="4"].active { background-color: #6b21a8; border-color: #a855f7; color: #ffffff; }
+.eo-pill-btn[data-move="5"].active { background-color: #92400e; border-color: #f59e0b; color: #ffffff; }
+.eo-pill-btn[data-move="6"].active { background-color: #9f1239; border-color: #f43f5e; color: #ffffff; }
+
+.eo-axis-move-Chip.len-1 { border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; }
+.eo-axis-move-Chip.len-2 { border: 1px solid rgba(14, 165, 233, 0.4); color: #38bdf8; }
+.eo-axis-move-Chip.len-3 { border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; }
+.eo-axis-move-Chip.len-4 { border: 1px solid rgba(168, 85, 247, 0.4); color: #c084fc; }
+.eo-axis-move-Chip.len-5 { border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; }
+.eo-axis-move-Chip.len-6 { border: 1px solid rgba(244, 63, 94, 0.4); color: #fb7185; }
+
 .eo-filter-selects {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -1991,13 +2013,77 @@ option[value="VT323"] { font-family: 'VT323', monospace; }
   color: #64b5f6;
 }
 
+/* --- EO Length Badges by Move Count --- */
 .eo-sol-len-badge {
   background-color: #343746;
   color: #d8dae5;
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 2px 7.5px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.15s ease;
+}
+
+.eo-sol-len-badge.len-0 {
+  background-color: rgba(20, 184, 166, 0.2);
+  border-color: rgba(20, 184, 166, 0.45);
+  color: #2dd4bf;
+}
+
+.eo-sol-len-badge.len-1 {
+  background-color: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #4ade80;
+}
+
+.eo-sol-len-badge.len-2 {
+  background-color: rgba(14, 165, 233, 0.2);
+  border-color: rgba(14, 165, 233, 0.45);
+  color: #38bdf8;
+}
+
+.eo-sol-len-badge.len-3 {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #818cf8;
+}
+
+.eo-sol-len-badge.len-4 {
+  background-color: rgba(168, 85, 247, 0.2);
+  border-color: rgba(168, 85, 247, 0.45);
+  color: #c084fc;
+}
+
+.eo-sol-len-badge.len-5 {
+  background-color: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+}
+
+.eo-sol-len-badge.len-6 {
+  background-color: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #fb7185;
+}
+
+.eo-sol-len-badge.len-7 {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #f87171;
+}
+
+.eo-sol-len-badge.len-8,
+.eo-sol-len-badge.len-9,
+.eo-sol-len-badge.len-10 {
+  background-color: rgba(217, 70, 239, 0.2);
+  border-color: rgba(217, 70, 239, 0.45);
+  color: #e879f9;
 }
 
 .eo-sol-axis-badge {

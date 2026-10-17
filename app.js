@@ -2294,7 +2294,7 @@ B2 L2 D2 F2//M slice (4/20)
         for (let m = 0; m <= maxMoves; m++) {
           const c = axData.byMove[m] ? axData.byMove[m].total : 0;
           if (c > 0) {
-            moveChips.push(`<span class="eo-axis-move-Chip">${m}m: ${c}</span>`);
+            moveChips.push(`<span class="eo-axis-move-Chip len-${m}">${m}m: ${c}</span>`);
           }
         }
 
@@ -2403,7 +2403,7 @@ B2 L2 D2 F2//M slice (4/20)
         <div class="eo-sol-left">
           <span class="eo-sol-idx">${idx + 1}.</span>
           <span class="eo-sol-alg" title="Haz clic para cargar este EO en el editor y verlo en el cubo 3D">${escapeHtml(sol.notation)}</span>
-          <span class="eo-sol-len-badge">${sol.length}</span>
+          <span class="eo-sol-len-badge len-${sol.length}">${sol.length}</span>
           <span class="eo-sol-axis-badge ${axisBadgeCls}">${sol.axis}</span>
         </div>
         <div class="eo-sol-right">
