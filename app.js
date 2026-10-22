@@ -373,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentStep = 0; // 0 = scramble only, 1..totalMoves
   let isPlaying = false;
   let playInterval = null;
+  let lastCircularWarningTags = '';
   let animDuration = 260; // ms
   let isAnimating = false;
 
@@ -956,6 +957,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Parse FMC Moves (Comments, Insertions, NISS)
     parsedSolution = FMC.parseFMCSolution(rawMoves);
+
+    // Check for circular insertion warning to protect UI
+    const cycleWarningEl = document.getElementById('insertion-cycle-warning');
+    if (parsedSolution.circularTags && parsedSolution.circularTags.length > 0) {
+      const tagsStr = parsedSolution.circularTags.join(', ');
+      if (cycleWarningEl) {
+        cycleWarningEl.style.display = 'inline-flex';
+        cycleWarningEl.textContent = `⚠️ Ciclo: ${tagsStr}`;
+        cycleWarningEl.title = `Inserción circular detectada en ${tagsStr}. Se detuvo la recursión para evitar que la página se congele.`;
+      }
+      if (tagsStr !== lastCircularWarningTags) {
+        lastCircularWarningTags = tagsStr;
+        showToast(`⚠️ Inserción circular en ${tagsStr}: recursión evitada.`);
+      }
+    } else {
+      if (cycleWarningEl) {
+        cycleWarningEl.style.display = 'none';
+      }
+      lastCircularWarningTags = '';
+    }
 
     // 3. Render Final Result display
     if (parsedSolution.finalMoves.length > 0) {

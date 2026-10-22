@@ -309,67 +309,72 @@
     return curr;
   }
 
-  // Resolve all insertions recursively (supporting nested insertions like @@ inside @, etc.)
+  // Resolve all insertions safely with cycle detection, supporting nested insertions
+  // while preventing infinite recursion or memory crashes if a tag references itself or forms a loop.
   function resolveInsertions(targetText, rawDefs) {
-    const insertionDefs = {};
-    for (const tag in rawDefs) {
-      insertionDefs[tag] = rawDefs[tag];
+    if (!targetText || !rawDefs || Object.keys(rawDefs).length === 0) {
+      return { resolvedText: targetText || '', insertionDefs: rawDefs || {}, circularTags: [] };
     }
 
-    const getSortedKeys = (defs) => Object.keys(defs).sort((a, b) => b.length - a.length || a.localeCompare(b));
-    const MAX_PASSES = 30;
+    const circularTags = new Set();
+    const allTags = Object.keys(rawDefs).sort((a, b) => b.length - a.length || a.localeCompare(b));
+    if (allTags.length === 0) {
+      return { resolvedText: targetText, insertionDefs: rawDefs, circularTags: [] };
+    }
 
-    // 1. Resolve nested insertions inside insertion definitions themselves (e.g. @ contains @@)
-    for (let pass = 0; pass < MAX_PASSES; pass++) {
-      let changed = false;
-      const sortedKeys = getSortedKeys(insertionDefs);
+    const escapedTags = allTags.map(t => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'));
+    const tagRegex = new RegExp(escapedTags.join('|'), 'g');
 
-      for (const tag of sortedKeys) {
-        const escaped = tag.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-        const reg = new RegExp(escaped, 'g');
+    // Expand commutators in raw definitions first
+    const defs = {};
+    for (const tag of allTags) {
+      defs[tag] = expandCommutators(rawDefs[tag] || '');
+    }
 
-        for (const parentTag in insertionDefs) {
-          if (parentTag === tag) continue;
-          const oldVal = insertionDefs[parentTag];
-          if (reg.test(oldVal)) {
-            const newVal = oldVal.replace(reg, ' ' + insertionDefs[tag] + ' ');
-            if (newVal !== oldVal) {
-              insertionDefs[parentTag] = newVal;
-              changed = true;
-            }
-          }
-        }
+    const MAX_DEPTH = 10;
+    const MAX_LEN = 15000;
+
+    function expand(text, ancestorSet, depth) {
+      if (!text || depth > MAX_DEPTH || text.length > MAX_LEN) {
+        return text;
       }
-      if (!changed) break;
-    }
 
-    // 2. Expand commutators that might have been formed or nested in insertion definitions
-    for (const tag in insertionDefs) {
-      insertionDefs[tag] = expandCommutators(insertionDefs[tag]);
-    }
-
-    // 3. Resolve insertions in the target text (iteratively until no tags remain)
-    let resolvedText = targetText;
-    for (let pass = 0; pass < MAX_PASSES; pass++) {
-      let changed = false;
-      const sortedKeys = getSortedKeys(insertionDefs);
-
-      for (const tag of sortedKeys) {
-        const escaped = tag.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-        const reg = new RegExp(escaped, 'g');
-
-        if (reg.test(resolvedText)) {
-          const newText = resolvedText.replace(reg, ' ' + insertionDefs[tag] + ' ');
-          if (newText !== resolvedText) {
-            resolvedText = newText;
-            changed = true;
-          }
+      return text.replace(tagRegex, (matchedTag) => {
+        if (ancestorSet.has(matchedTag)) {
+          // Cycle / self-recursion detected! Break cycle immediately.
+          circularTags.add(matchedTag);
+          return matchedTag;
         }
-      }
-      if (!changed) break;
+
+        if (!defs[matchedTag]) {
+          return matchedTag;
+        }
+
+        const nextAncestors = new Set(ancestorSet);
+        nextAncestors.add(matchedTag);
+
+        const expandedVal = expand(defs[matchedTag], nextAncestors, depth + 1);
+        return ' ' + expandedVal + ' ';
+      });
     }
 
-    return { resolvedText, insertionDefs };
+    // 1. Resolve nested definitions inside defs safely
+    const resolvedDefs = {};
+    for (const tag of allTags) {
+      const ancestors = new Set([tag]);
+      resolvedDefs[tag] = expand(defs[tag], ancestors, 1).trim();
+      resolvedDefs[tag] = expandCommutators(resolvedDefs[tag]);
+    }
+
+    // 2. Resolve insertions in targetText
+    let resolvedText = expand(targetText, new Set(), 0);
+    resolvedText = expandCommutators(resolvedText);
+
+    return {
+      resolvedText,
+      insertionDefs: resolvedDefs,
+      circularTags: Array.from(circularTags)
+    };
   }
 
   // Simplify move sequences by canceling redundant moves,
@@ -533,7 +538,7 @@
     fullBody = expandCommutators(fullBody);
 
     // Replace insertions (including nested insertions)
-    const { resolvedText } = resolveInsertions(fullBody, insertionDefs);
+    const { resolvedText, circularTags } = resolveInsertions(fullBody, insertionDefs);
     fullBody = resolvedText;
 
     // Now parse NISS
@@ -606,7 +611,8 @@
       finalMoves,
       finalResultStr: finalMoves.join(' '),
       ftm: finalMoves.length,
-      timeline
+      timeline,
+      circularTags: circularTags || []
     };
   }
 
@@ -727,7 +733,7 @@
     code = code.replace(/\/\*[\s\S]*?\*\//g, '');
     code = expandCommutators(code);
 
-    const { resolvedText } = resolveInsertions(code, insertionDefs);
+    const { resolvedText, circularTags } = resolveInsertions(code, insertionDefs);
     code = resolvedText;
 
     let normalMoves = [];
@@ -786,7 +792,8 @@
       inverseMoves,
       currentBlockInverseMoves,
       lastMove,
-      totalStep: normalMoves.length + inverseMoves.length
+      totalStep: normalMoves.length + inverseMoves.length,
+      circularTags: circularTags || []
     };
   }
 
